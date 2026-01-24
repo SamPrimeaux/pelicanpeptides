@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse our complete catalog of research-grade peptides. Third-party tested with COAs included." />
+  <title>Research Peptides Catalog | Pelican Peptides</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Stripe.js (safe to load even in preview mode) -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <style>
+    :root {
+      --primary: #004E8A;
+      --secondary: #0077BE;
+      --accent: #00A8CC;
+      --dark: #0A1F44;
+      --gray-100: #F8F9FA;
+      --gray-200: #E9ECEF;
+      --gray-300: #DEE2E6;
+      --gray-500: #6C757D;
+      --white: #FFFFFF;
+      --radius: 10px;
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 10px 22px rgba(0, 0, 0, 0.10);
+      --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(900px 420px at 15% 0%, rgba(0,168,204,.10), transparent 60%),
+        radial-gradient(900px 420px at 85% 0%, rgba(0,119,190,.10), transparent 55%),
+        var(--gray-100);
+      color: var(--dark);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Nav (Shared) */
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--secondary); }
+    .nav-links a.active {
+      color: var(--secondary);
+      font-weight: 700;
+      position: relative;
+    }
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--secondary);
+      border-radius: 2px;
+    }
+
+    .nav-cta { display: flex; gap: 0.75rem; align-items:center; }
+
+    .btn {
+      padding: 0.6rem 1.1rem;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      font-size: 0.92rem;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      color: var(--dark);
+    }
+
+    .btn-outline {
+      border-color: var(--gray-300);
+      background: var(--white);
+    }
+    .btn-outline:hover {
+      border-color: rgba(0, 119, 190, .35);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+      border-color: var(--primary);
+      box-shadow: 0 10px 18px rgba(0, 78, 138, 0.16);
+    }
+    .btn-primary:hover {
+      background: #003d6d;
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(0, 78, 138, 0.22);
+    }
+
+    /* Page Header */
+    .page-header {
+      background: var(--white);
+      padding: 4rem 2rem 3.25rem;
+      text-align: center;
+      border-bottom: 1px solid var(--gray-200);
+      position: relative;
+      overflow: hidden;
+    }
+    .page-header:before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(900px 420px at 15% 10%, rgba(0,168,204,.14), transparent 60%),
+        radial-gradient(840px 420px at 85% 0%, rgba(0,119,190,.14), transparent 55%);
+      pointer-events:none;
+    }
+    .page-header > *{ position: relative; }
+
+    .page-header h1 {
+      font-size: 2.6rem;
+      font-weight: 800;
+      margin-bottom: 0.8rem;
+      color: var(--dark);
+      letter-spacing: -0.03em;
+    }
+    .page-header p {
+      color: var(--gray-500);
+      font-size: 1.08rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    /* Toolbar */
+    .toolbar-container {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 1rem 2rem;
+    }
+
+    .toolbar {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      scrollbar-width: thin;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--gray-200);
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+    .search-sort { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .search-box input {
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      min-width: 240px;
+      outline: none;
+      transition: box-shadow .18s ease, border-color .18s ease;
+    }
+    .search-box input:focus{
+      border-color: rgba(0,119,190,.45);
+      box-shadow: 0 0 0 4px rgba(0,168,204,.14);
+    }
+
+    .sort-select select {
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 0.92rem;
+      background: var(--white);
+      cursor: pointer;
+      outline: none;
+    }
+
+    .toolbar-meta{
+      max-width:1280px;
+      margin: .75rem auto 0;
+      color: var(--gray-500);
+      font-size: 0.9rem;
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      padding:.4rem .75rem;
+      border-radius:999px;
+      border:1px solid var(--gray-200);
+      background: var(--gray-100);
+      color: var(--gray-500);
+    }
+
+    /* Grid */
+    .products-section {
+      max-width: 1280px;
+      margin: 2.25rem auto 0;
+      padding: 0 2rem;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.6rem;
+    }
+
+    .product-card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      transition: all 0.18s ease;
+      overflow: hidden;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      color: inherit;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(0, 119, 190, 0.45);
+    }
+
+    .product-image {
+      height: 220px;
+      background: linear-gradient(180deg, #f7fbff, #edf6ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--gray-200);
+      position: relative;
+      overflow:hidden;
+    }
+
+    .product-image img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      object-position: center;
+      padding: 14px;
+      display:block;
+      filter: saturate(1.02) contrast(1.02);
+    }
+
+    .img-fallback{
+      width:100%;
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 1.5rem;
+      color: rgba(10,31,68,.55);
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      background:
+        radial-gradient(700px 300px at 30% 20%, rgba(0,168,204,.18), transparent 60%),
+        radial-gradient(700px 300px at 70% 0%, rgba(0,119,190,.16), transparent 55%),
+        linear-gradient(180deg, #ffffff, #f6fbff);
+    }
+
+    .product-content {
+      padding: 1.25rem 1.25rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: .65rem;
+    }
+
+    .product-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .badge-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:.75rem;
+    }
+
+    .tag{
+      font-size:.72rem;
+      font-weight:700;
+      padding:.28rem .55rem;
+      border-radius: 999px;
+      border:1px solid var(--gray-200);
+      color: var(--gray-500);
+      background: var(--gray-100);
+      white-space:nowrap;
+    }
+    .tag.estimated{
+      border-color: rgba(255, 170, 0, .35);
+      background: rgba(255, 170, 0, .08);
+      color: #8a5a00;
+    }
+
+    .product-card h3 {
+      font-size: 1.15rem;
+      color: var(--dark);
+      margin-bottom: 0.1rem;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      font-size: 0.92rem;
+      color: var(--gray-500);
+      margin-bottom: 0.25rem;
+    }
+
+    .product-specs {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: .1rem;
+    }
+
+    .spec {
+      background: var(--gray-100);
+      padding: 0.28rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      color: var(--gray-500);
+      font-weight: 600;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    .product-footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: .75rem;
+      padding-top: .75rem;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .product-price {
+      font-weight: 800;
+      color: var(--dark);
+      font-size: 1.08rem;
+      letter-spacing: -0.01em;
+    }
+
+    .btn-row{
+      display:flex;
+      gap:.55rem;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .btn-view {
+      padding: 0.52rem 0.9rem;
+      background: var(--white);
+      border: 1px solid rgba(0, 119, 190, 0.55);
+      color: var(--secondary);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      transition: all 0.18s ease;
+      cursor:pointer;
+    }
+    .btn-view:hover { background: var(--secondary); color: var(--white); }
+
+    .btn-buy{
+      padding: 0.52rem 0.9rem;
+      background: var(--primary);
+      border: 1px solid var(--primary);
+      color: var(--white);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      transition: all 0.18s ease;
+      cursor:pointer;
+      box-shadow: 0 10px 18px rgba(0,78,138,0.14);
+    }
+    .btn-buy:hover{
+      background:#003d6d;
+      transform: translateY(-1px);
+    }
+    .btn-buy:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    /* Footer (Shared) */
+    footer {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+      padding: 4rem 2rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+    }
+
+    @media (max-width: 900px) {
+      .nav-links { display:none; }
+    }
+    @media (max-width: 768px) {
+      .footer-container { grid-template-columns: 1fr; gap: 2rem; }
+      .toolbar { flex-direction: column; align-items: stretch; gap: 1.25rem; }
+      .filter-tabs { width: 100%; overflow-x: auto; padding-bottom: 10px; }
+      .search-sort { flex-direction: column; align-items: stretch; }
+      .search-box input { width: 100%; min-width: unset; }
+      .nav-container{ padding: .85rem 1rem; }
+    }
+
+    .footer-brand h3 {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      letter-spacing:-0.02em;
+    }
+
+    .footer-brand p {
+      color: var(--gray-500);
+      font-size: 0.95rem;
+      max-width: 340px;
+      line-height: 1.65;
+    }
+
+    .footer-col h4 {
+      color: var(--dark);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.25rem;
+      font-weight: 700;
+    }
+
+    .footer-col ul { list-style: none; }
+    .footer-col li { margin-bottom: 0.75rem; }
+
+    .footer-col a {
+      color: var(--gray-500);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    .footer-col a:hover { color: var(--secondary); padding-left: 4px; }
+
+    .footer-bottom {
+      max-width: 1280px;
+      margin: 3rem auto 0;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--gray-500);
+      font-size: 0.85rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Mini modal for preview messages */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      background: rgba(10,31,68,.92);
+      color: #fff;
+      padding: 12px 14px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      font-weight: 700;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 9999;
+      max-width: min(560px, calc(100% - 32px));
+    }
+    .toast.show{
+      opacity:1;
+      transform: translateX(-50%) translateY(-2px);
+    }
+    .toast small{
+      display:block;
+      opacity:.8;
+      font-weight:600;
+      margin-top: 2px;
+      line-height:1.35;
+    }
+
+    /* Quick View overlay + modal */
+    #qbOverlay{
+      position: fixed; inset: 0;
+      background: rgba(10,31,68,.42);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 4000;
+    }
+
+    #quickView{
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(980px, calc(100% - 28px));
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      z-index: 5000;
+      padding: 14px;
+    }
+
+    #qvClose{
+      position:absolute; right: 12px; top: 10px;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      cursor:pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .qv-grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px){
+      .qv-grid{ grid-template-columns: 1fr; }
+    }
+
+    .qv-media{
+      background: linear-gradient(180deg, #f7fbff, #edf6ff);
+      border: 1px solid var(--gray-200);
+      border-radius: 14px;
+      min-height: 360px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .qv-media img{
+      width:100%; height:100%;
+      object-fit: contain;
+      padding: 18px;
+    }
+
+    .qv-cat{ font-weight:800; font-size: .8rem; color: var(--secondary); letter-spacing:.06em; text-transform:uppercase; }
+    .qv-name{ margin:.2rem 0 .2rem; font-size: 1.6rem; letter-spacing:-.02em; }
+    .qv-sub{ color: var(--gray-500); margin: 0; }
+
+    .qv-top{
+      display:flex; align-items:flex-start; justify-content:space-between; gap: 14px;
+      padding: 6px 4px 10px;
+    }
+    .qv-price{ font-weight: 900; font-size: 1.3rem; color: var(--dark); }
+
+    .qv-desc{ color: var(--gray-500); margin: 6px 4px 12px; }
+
+    .qv-actions{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; padding: 4px; }
+    .qv-qty{ display:flex; align-items:center; gap: 8px; }
+    .qv-qty button{
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      cursor:pointer;
+      font-weight: 900;
+    }
+    .qv-qty input{
+      width: 64px;
+      height: 40px;
+      text-align:center;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .qv-add{
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid var(--secondary);
+      background: var(--white);
+      color: var(--secondary);
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .qv-add:hover{ background: var(--secondary); color: var(--white); }
+
+    .qv-buy{
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .qv-buy:hover{ background: #003d6d; }
+
+    .qv-footnote{ margin: 10px 4px 6px; color: rgba(108,117,125,.85); font-size:.9rem; }
+  </style>
+</head>
+
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo" aria-label="Pelican Peptides Home">
+        <img src="https://imagedelivery.net/g7wf09fCONpnidkRnR_5vw/5de20163-4240-47a2-5826-c3b42cf8b500/public"
+             alt="Pelican Peptides Logo"
+             style="height: 85px; width: auto; display: block;">
+      </a>
+
+      <ul class="nav-links" aria-label="Primary Navigation">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products" class="active">Products</a></li>
+        <li><a href="/research">Research</a></li>
+        <li><a href="/quality">Quality</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+
+      <div class="nav-cta">
+        <a href="/login" class="btn btn-outline" id="miniCartBtn">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          Cart (0)
+        </a>
+
+        <a href="/cart" class="btn btn-primary" id="bigCartBtn">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+          </svg>
+          Cart (0)
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-header">
+    <h1>Catalog</h1>
+    <p>Explore our premium range of research peptides. Filter by category or search below.</p>
+  </div>
+
+  <div class="toolbar-container">
+    <div class="toolbar">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-btn active" data-category="all">All</button>
+        <button class="filter-btn" data-category="recovery">Recovery</button>
+        <button class="filter-btn" data-category="performance">Performance</button>
+        <button class="filter-btn" data-category="cognitive">Cognitive</button>
+        <button class="filter-btn" data-category="metabolic">Metabolic</button>
+        <button class="filter-btn" data-category="supplies">Supplies</button>
+      </div>
+
+      <div class="search-sort">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search..." />
+        </div>
+        <div class="sort-select">
+          <select id="sortSelect">
+            <option value="featured">Featured</option>
+            <option value="name-asc">Name (A-Z)</option>
+            <option value="name-desc">Name (Z-A)</option>
+            <option value="price-asc">Price (Low-High)</option>
+            <option value="price-desc">Price (High-Low)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar-meta">
+      <div class="pill" id="resultsPill">0 products</div>
+      <div class="pill">COAs • Third-party tested • Research use only</div>
+    </div>
+  </div>
+
+  <section class="products-section">
+    <div class="products-grid" id="productsGrid"></div>
+  </section>
+
+  <footer>
+    <div class="footer-container">
+      <div class="footer-brand">
+        <h3>Pelican Peptides</h3>
+        <p>Advancing scientific discovery through purity, precision, and transparency.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="/products">Catalog</a></li>
+          <li><a href="/research">Research</a></li>
+          <li><a href="/quality">Quality</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/wholesale">Wholesale</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/terms">Terms</a></li>
+          <li><a href="/disclaimer">Disclaimer</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Pelican Peptides. Research Use Only.</p>
+      <div style="opacity:0.5; font-size: 0.8rem;">Built by InnerAnimalMedia</div>
+    </div>
+  </footer>
+
+  <!-- Quick View Lightbox -->
+  <div id="qbOverlay" style="display:none;"></div>
+
+  <div id="quickView" aria-hidden="true" role="dialog" aria-modal="true" style="display:none;">
+    <button id="qvClose" type="button" aria-label="Close">×</button>
+
+    <div class="qv-grid">
+      <div class="qv-media">
+        <img id="qvImg" alt="" />
+      </div>
+
+      <div class="qv-info">
+        <div class="qv-top">
+          <div>
+            <div id="qvCat" class="qv-cat"></div>
+            <h3 id="qvName" class="qv-name"></h3>
+            <p id="qvSub" class="qv-sub"></p>
+          </div>
+          <div id="qvPrice" class="qv-price"></div>
+        </div>
+
+        <p id="qvDesc" class="qv-desc"></p>
+
+        <div class="qv-actions">
+          <div class="qv-qty">
+            <button type="button" id="qvMinus">−</button>
+            <input id="qvQty" type="number" min="1" value="1" />
+            <button type="button" id="qvPlus">+</button>
+          </div>
+
+          <button type="button" id="qvAdd" class="qv-add">Add to Cart</button>
+          <button type="button" id="qvBuy" class="qv-buy">Buy</button>
+        </div>
+
+        <div class="qv-footnote">COA included • Research use only</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /**
+     * Stripe Integration (Preview + Ready-to-wire)
+     * ------------------------------------------------
+     * Mode A (Preview): no keys needed; shows UI + stores cart locally.
+     * Mode B (Real Checkout): set STRIPE_PUBLISHABLE_KEY and have /api/checkout create sessions server-side.
+     */
+    const STRIPE_PUBLISHABLE_KEY = ""; // TODO: put your Stripe publishable key here later (pk_live_... or pk_test_...)
+    const CHECKOUT_ENDPOINT = "/api/checkout"; // Worker endpoint that creates a Stripe Checkout Session
+
+    const R2_PRODUCTS = "https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/";
+
+    // Product Catalog (from your list; missing prices are estimated and tagged)
+    const PRODUCTS = [
+      // Metabolic
+      { id:"tirz-10", slug:"tirzepatide-10mg", name:"Tirzepatide", subtitle:"GLP / Metabolic", mg:"10mg", category:"metabolic", price:120, badge:"Featured" },
+      { id:"tirz-20", slug:"tirzepatide-20mg", name:"Tirzepatide", subtitle:"GLP / Metabolic", mg:"20mg", category:"metabolic", price:140 },
+      { id:"tirz-30", slug:"tirzepatide-30mg", name:"Tirzepatide", subtitle:"GLP / Metabolic", mg:"30mg", category:"metabolic", price:160 },
+
+      { id:"reta-20", slug:"retatrutide-20mg", name:"Retatrutide", subtitle:"GLP / Metabolic", mg:"20mg", category:"metabolic", price:140 },
+      { id:"reta-30", slug:"retatrutide-30mg", name:"Retatrutide", subtitle:"GLP / Metabolic", mg:"30mg", category:"metabolic", price:160, estimated:true },
+
+      { id:"cagri-5", slug:"cagrilintide-5mg", name:"Cagrilintide", subtitle:"GLP / Metabolic", mg:"5mg", category:"metabolic", price:50, image: R2_PRODUCTS + "cagrilintide-5mg.PNG" },
+
+      { id:"glp-2", slug:"glp-2", name:"GLP-2", subtitle:"GLP / Metabolic", mg:"", category:"metabolic", price:55, estimated:true, image: R2_PRODUCTS + "GLP-2.PNG" },
+      { id:"glp-3", slug:"glp-3-10mg", name:"GLP-3", subtitle:"GLP / Metabolic", mg:"10mg", category:"metabolic", price:60, estimated:true, image: R2_PRODUCTS + "GLP-3-10mg.webp" },
+
+      // Performance (Growth / GH)
+      { id:"ipa-5", slug:"ipamorelin-5mg", name:"Ipamorelin", subtitle:"Growth / GH", mg:"5mg", category:"performance", price:30, image: R2_PRODUCTS + "IPAMORELIN-5mg.webp" },
+      { id:"serm-10", slug:"sermorelin-10mg", name:"Sermorelin", subtitle:"Growth / GH", mg:"10mg", category:"performance", price:50, image: R2_PRODUCTS + "sermorelin-10MG.PNG" },
+      { id:"tesa-10", slug:"tesamorelin-10mg", name:"Tesamorelin", subtitle:"Growth / GH", mg:"10mg", category:"performance", price:65, image: R2_PRODUCTS + "tesamorelin-10.mg.PNG" },
+
+      // Cognitive (Wellness support in this simple categorization)
+      { id:"nad-500", slug:"nad-500mg", name:"NAD+", subtitle:"Wellness / Support", mg:"500mg", category:"cognitive", price:60, image: R2_PRODUCTS + "NAD%2B-500mg.PNG" },
+      { id:"ghk-100", slug:"ghk-cu-100mg", name:"GHK-CU", subtitle:"Wellness / Support", mg:"100mg", category:"cognitive", price:50, image:"https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/GHL-CU-100mg.PNG" },
+
+      { id:"b12-10ml", slug:"b-12-10ml", name:"B-12", subtitle:"Wellness / Support", mg:"10ml", category:"cognitive", price:50 },
+      { id:"lipo-c-10ml", slug:"lipo-c-10ml", name:"Lipo-C", subtitle:"Wellness / Support", mg:"10ml", category:"cognitive", price:80 },
+      { id:"superhuman-10ml", slug:"superhuman-blend-10ml", name:"Superhuman Blend", subtitle:"Wellness / Support", mg:"10ml", category:"cognitive", price:90 },
+      { id:"glow-70mg", slug:"glow-70mg", name:"GLOW", subtitle:"Wellness / Support", mg:"70mg", category:"cognitive", price:90, estimated:true, image: R2_PRODUCTS + "glow-70mg.webp" },
+
+      // Recovery
+      { id:"bpc-10", slug:"bpc-157-10mg", name:"BPC-157", subtitle:"Recovery / Repair", mg:"10mg", category:"recovery", price:45, image: R2_PRODUCTS + "BPC-157-10mg.PNG", badge:"Best Seller" },
+      { id:"tb-10", slug:"tb-500-10mg", name:"TB-500", subtitle:"Recovery / Repair", mg:"10mg", category:"recovery", price:45, image: R2_PRODUCTS + "TB-500-10mg.PNG", badge:"Popular" },
+      { id:"bpc-tb", slug:"bpc-157-tb-500-10-10", name:"BPC-157 / TB-500", subtitle:"Recovery / Repair", mg:"10mg / 10mg", category:"recovery", price:80 },
+
+      // Supplies
+      { id:"bac-3ml", slug:"bac-water-3ml", name:"Bac Water", subtitle:"Supplies", mg:"3ml", category:"supplies", price:6 }
+    ];
+
+    // Simple local cart
+    const CART_KEY = "pelican_cart";
+    function readCart(){
+      try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]"); }
+      catch { return []; }
+    }
+    function writeCart(cart){
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      updateCartBadges();
+    }
+    function addToCart(productId, qty=1){
+      const cart = readCart();
+      const existing = cart.find(i => i.id === productId);
+      if (existing) existing.quantity += qty;
+      else cart.push({ id: productId, quantity: qty });
+      writeCart(cart);
+    }
+    function cartCount(){
+      return readCart().reduce((sum, i) => sum + (i.quantity || 0), 0);
+    }
+    function updateCartBadges(){
+      const count = cartCount();
+      const mini = document.getElementById("miniCartBtn");
+      const big = document.getElementById("bigCartBtn");
+      const icon = `
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width: 16px; height: 16px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+      `;
+      if (mini) mini.innerHTML = `${icon} Cart (${count})`;
+      if (big) big.innerHTML = `${icon} Cart (${count})`;
+    }
+
+    // Toast
+    const toastEl = document.getElementById("toast");
+    let toastTimer = null;
+    function toast(title, subtitle=""){
+      if (!toastEl) return;
+      toastEl.innerHTML = `${title}${subtitle ? `<small>${subtitle}</small>` : ""}`;
+      toastEl.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
+    }
+
+    // Quick View Modal
+    let currentQV = null;
+
+    const overlay = document.getElementById("qbOverlay");
+    const modal = document.getElementById("quickView");
+
+    const qvImg = document.getElementById("qvImg");
+    const qvCat = document.getElementById("qvCat");
+    const qvName = document.getElementById("qvName");
+    const qvSub = document.getElementById("qvSub");
+    const qvPrice = document.getElementById("qvPrice");
+    const qvDesc = document.getElementById("qvDesc");
+
+    const qvQty = document.getElementById("qvQty");
+    document.getElementById("qvMinus").onclick = () => qvQty.value = Math.max(1, (+qvQty.value||1) - 1);
+    document.getElementById("qvPlus").onclick = () => qvQty.value = (+qvQty.value||1) + 1;
+
+    function openQuickView(product){
+      currentQV = product;
+
+      qvImg.src = product.image || "";
+      qvImg.alt = `${product.name} ${product.mg || ""}`.trim();
+
+      qvCat.textContent = (product.category || "").toUpperCase();
+      qvName.textContent = product.name;
+      qvSub.textContent = product.subtitle || product.mg || "";
+      qvPrice.textContent = formatMoney(product.price);
+
+      qvDesc.textContent = product.description || "Premium research-grade peptide. Third-party tested with Certificate of Analysis included. For research use only.";
+
+      qvQty.value = 1;
+
+      overlay.style.display = "block";
+      modal.style.display = "block";
+      modal.setAttribute("aria-hidden","false");
+    }
+
+    function closeQuickView(){
+      overlay.style.display = "none";
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden","true");
+      currentQV = null;
+    }
+    overlay.onclick = closeQuickView;
+    document.getElementById("qvClose").onclick = closeQuickView;
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeQuickView(); });
+
+    // Buttons inside modal
+    document.getElementById("qvAdd").onclick = () => {
+      if (!currentQV) return;
+      addToCart(currentQV.id, +qvQty.value || 1);
+      closeQuickView();
+      toast("Added to cart", `${currentQV.name}${currentQV.mg ? " • " + currentQV.mg : ""}`);
+    };
+
+    document.getElementById("qvBuy").onclick = async () => {
+      if (!currentQV) return;
+      const qty = +qvQty.value || 1;
+      addToCart(currentQV.id, qty);
+
+      // Preview-only if no key
+      if (!STRIPE_PUBLISHABLE_KEY) {
+        closeQuickView();
+        toast("Added to cart", "Stripe preview mode - add your key to enable checkout.");
+        return;
+      }
+
+      // Real Stripe checkout
+      const btn = document.getElementById("qvBuy");
+      btn.disabled = true;
+      btn.textContent = "Loading…";
+
+      try {
+        const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+        const res = await fetch(CHECKOUT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: [{ id: currentQV.id, quantity: qty }],
+          })
+        });
+
+        if (!res.ok) throw new Error("Checkout endpoint failed");
+        const data = await res.json();
+        if (!data || !data.sessionId) throw new Error("Missing sessionId");
+
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        if (error) throw error;
+
+      } catch (err) {
+        console.error(err);
+        closeQuickView();
+        toast("Stripe not connected yet", "Hook /api/checkout in your Worker to create Checkout Sessions.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Buy";
+      }
+    };
+
+    // Rendering
+    let activeCategory = "all";
+
+    function formatMoney(n){
+      return new Intl.NumberFormat("en-US", { style:"currency", currency:"USD" }).format(n);
+    }
+    function initials(name, mg){
+      const s = `${name} ${mg||""}`.trim().replace(/[^\w\s\+]/g,"");
+      const parts = s.split(/\s+/).filter(Boolean);
+      const a = (parts[0]||"P")[0];
+      const b = (parts[1]||parts[0]||"P")[0];
+      return (a + b).toUpperCase();
+    }
+
+    function filteredProducts(){
+      const q = (document.getElementById("searchInput").value || "").trim().toLowerCase();
+      return PRODUCTS.filter(p => {
+        const inCat = activeCategory === "all" || p.category === activeCategory;
+        if (!inCat) return false;
+        if (!q) return true;
+        const hay = `${p.name} ${p.mg||""} ${p.subtitle||""} ${p.category}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function sortList(list){
+      const v = document.getElementById("sortSelect").value;
+      const arr = [...list];
+      arr.sort((a,b) => {
+        switch(v){
+          case "name-asc": return (a.name + a.mg).localeCompare(b.name + b.mg);
+          case "name-desc": return (b.name + b.mg).localeCompare(a.name + a.mg);
+          case "price-asc": return a.price - b.price;
+          case "price-desc": return b.price - a.price;
+          default: return 0; // featured = given order
+        }
+      });
+      return arr;
+    }
+
+    function render(){
+      const grid = document.getElementById("productsGrid");
+      const list = sortList(filteredProducts());
+
+      document.getElementById("resultsPill").textContent =
+        `${list.length} product${list.length === 1 ? "" : "s"}`;
+
+      grid.innerHTML = "";
+      list.forEach(p => {
+        const a = document.createElement("a");
+        a.href = `/products/${p.slug}`;
+        a.className = "product-card";
+        a.dataset.category = p.category;
+        a.dataset.name = p.name;
+        a.dataset.price = p.price;
+
+        const badgeText = p.badge || (p.category === "metabolic" ? "Metabolic" : "Catalog");
+        const estimatedTag = p.estimated ? `<span class="tag estimated">Estimated</span>` : `<span class="tag">Listed</span>`;
+
+        const img = p.image
+          ? `<img src="${p.image}" alt="${p.name} ${p.mg||""}".trim() loading="lazy" decoding="async"
+                 onerror="this.parentElement.innerHTML='<div class=\\'img-fallback\\'>${initials(p.name,p.mg)}</div>'">`
+          : `<div class="img-fallback">${initials(p.name,p.mg)}</div>`;
+
+        a.innerHTML = `
+          <div class="product-image">${img}</div>
+
+          <div class="product-content">
+            <div class="badge-row">
+              <div class="product-badge">${badgeText}</div>
+              ${estimatedTag}
+            </div>
+
+            <div>
+              <h3>${p.name}</h3>
+              <p class="subtitle">${p.subtitle || ""}</p>
+            </div>
+
+            <div class="product-specs">
+              <span class="spec">${p.mg || "Standard"}</span>
+              <span class="spec">COA Included</span>
+              <span class="spec">3rd-Party Tested</span>
+            </div>
+
+            <div class="product-footer">
+              <span class="product-price">${formatMoney(p.price)}</span>
+              <div class="btn-row">
+                <button class="btn-view" type="button" data-action="view">View</button>
+                <button class="btn-buy" type="button" data-action="buy">Buy</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Open quick view on card click
+        a.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+
+          // If View button clicked, allow navigation
+          if (btn && btn.dataset.action === "view") {
+            return; // let it navigate
+          }
+
+          // If Buy button clicked, handle purchase
+          if (btn && btn.dataset.action === "buy") {
+            e.preventDefault();
+            handleBuy(p, btn);
+            return;
+          }
+
+          // Otherwise, open quick view
+          e.preventDefault();
+          openQuickView(p);
+        });
+
+        grid.appendChild(a);
+      });
+    }
+
+    // Stripe Buy handler:
+    // - Always adds to local cart
+    // - If publishable key is present, attempts to redirect to a server-created Checkout Session
+    async function handleBuy(product, buttonEl){
+      addToCart(product.id, 1);
+      toast("Added to cart", `${product.name}${product.mg ? " • " + product.mg : ""}`);
+
+      // Preview-only if no key
+      if (!STRIPE_PUBLISHABLE_KEY) {
+        toast("Stripe preview mode", "Add your publishable key + Worker checkout endpoint to enable payments.");
+        return;
+      }
+
+      // Real mode (requires server endpoint)
+      buttonEl.disabled = true;
+      buttonEl.textContent = "Loading…";
+
+      try {
+        const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+
+        // Your Worker should create a Checkout Session server-side and return { sessionId }
+        const res = await fetch(CHECKOUT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: [{ id: product.id, quantity: 1 }],
+            // optionally pass success/cancel URLs if your server uses them
+          })
+        });
+
+        if (!res.ok) throw new Error("Checkout endpoint failed");
+        const data = await res.json();
+        if (!data || !data.sessionId) throw new Error("Missing sessionId");
+
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        if (error) throw error;
+
+      } catch (err) {
+        console.error(err);
+        toast("Stripe not connected yet", "Hook /api/checkout in your Worker to create Checkout Sessions.");
+      } finally {
+        buttonEl.disabled = false;
+        buttonEl.textContent = "Buy";
+      }
+    }
+
+    // Filter buttons (no global event bug)
+    document.getElementById("filterTabs").addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+      const category = btn.dataset.category;
+
+      activeCategory = category;
+
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      render();
+    });
+
+    // Search + Sort listeners
+    document.getElementById("searchInput").addEventListener("input", render);
+    document.getElementById("sortSelect").addEventListener("change", render);
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      updateCartBadges();
+      render();
+    });
+  </script>
+
+  <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015"
+    integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ=="
+    data-cf-beacon='{"version":"2024.11.0","token":"5946abeccf544acf956bd08c9b590231","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}'
+    crossorigin="anonymous"></script>
+
+</body>
+</html>
