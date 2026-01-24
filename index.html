@@ -33,7 +33,10 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background-color: var(--gray-100);
+      background:
+        radial-gradient(900px 420px at 15% 0%, rgba(0,168,204,.10), transparent 60%),
+        radial-gradient(900px 420px at 85% 0%, rgba(0,119,190,.10), transparent 55%),
+        var(--gray-100);
       color: var(--dark);
       line-height: 1.6;
       min-height: 100vh;
@@ -292,7 +295,7 @@
 
     .product-image {
       height: 220px;
-      background: linear-gradient(180deg, #f8fbff, #eef6ff);
+      background: linear-gradient(180deg, #f7fbff, #edf6ff);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -304,8 +307,11 @@
     .product-image img{
       width:100%;
       height:100%;
-      object-fit: cover;
+      object-fit: contain;
+      object-position: center;
+      padding: 14px;
       display:block;
+      filter: saturate(1.02) contrast(1.02);
     }
 
     .img-fallback{
@@ -563,6 +569,118 @@
       margin-top: 2px;
       line-height:1.35;
     }
+
+    /* Quick View overlay + modal */
+    #qbOverlay{
+      position: fixed; inset: 0;
+      background: rgba(10,31,68,.42);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 4000;
+    }
+
+    #quickView{
+      position: fixed;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(980px, calc(100% - 28px));
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      z-index: 5000;
+      padding: 14px;
+    }
+
+    #qvClose{
+      position:absolute; right: 12px; top: 10px;
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      cursor:pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .qv-grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+    }
+    @media (max-width: 860px){
+      .qv-grid{ grid-template-columns: 1fr; }
+    }
+
+    .qv-media{
+      background: linear-gradient(180deg, #f7fbff, #edf6ff);
+      border: 1px solid var(--gray-200);
+      border-radius: 14px;
+      min-height: 360px;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .qv-media img{
+      width:100%; height:100%;
+      object-fit: contain;
+      padding: 18px;
+    }
+
+    .qv-cat{ font-weight:800; font-size: .8rem; color: var(--secondary); letter-spacing:.06em; text-transform:uppercase; }
+    .qv-name{ margin:.2rem 0 .2rem; font-size: 1.6rem; letter-spacing:-.02em; }
+    .qv-sub{ color: var(--gray-500); margin: 0; }
+
+    .qv-top{
+      display:flex; align-items:flex-start; justify-content:space-between; gap: 14px;
+      padding: 6px 4px 10px;
+    }
+    .qv-price{ font-weight: 900; font-size: 1.3rem; color: var(--dark); }
+
+    .qv-desc{ color: var(--gray-500); margin: 6px 4px 12px; }
+
+    .qv-actions{ display:flex; gap: 10px; align-items:center; flex-wrap:wrap; padding: 4px; }
+    .qv-qty{ display:flex; align-items:center; gap: 8px; }
+    .qv-qty button{
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+      background: var(--white);
+      cursor:pointer;
+      font-weight: 900;
+    }
+    .qv-qty input{
+      width: 64px;
+      height: 40px;
+      text-align:center;
+      border-radius: 10px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .qv-add{
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid var(--secondary);
+      background: var(--white);
+      color: var(--secondary);
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .qv-add:hover{ background: var(--secondary); color: var(--white); }
+
+    .qv-buy{
+      height: 40px;
+      padding: 0 14px;
+      border-radius: 10px;
+      border: 1px solid var(--primary);
+      background: var(--primary);
+      color: var(--white);
+      font-weight: 800;
+      cursor:pointer;
+    }
+    .qv-buy:hover{ background: #003d6d; }
+
+    .qv-footnote{ margin: 10px 4px 6px; color: rgba(108,117,125,.85); font-size:.9rem; }
   </style>
 </head>
 
@@ -682,6 +800,45 @@
     </div>
   </footer>
 
+  <!-- Quick View Lightbox -->
+  <div id="qbOverlay" style="display:none;"></div>
+
+  <div id="quickView" aria-hidden="true" role="dialog" aria-modal="true" style="display:none;">
+    <button id="qvClose" type="button" aria-label="Close">×</button>
+
+    <div class="qv-grid">
+      <div class="qv-media">
+        <img id="qvImg" alt="" />
+      </div>
+
+      <div class="qv-info">
+        <div class="qv-top">
+          <div>
+            <div id="qvCat" class="qv-cat"></div>
+            <h3 id="qvName" class="qv-name"></h3>
+            <p id="qvSub" class="qv-sub"></p>
+          </div>
+          <div id="qvPrice" class="qv-price"></div>
+        </div>
+
+        <p id="qvDesc" class="qv-desc"></p>
+
+        <div class="qv-actions">
+          <div class="qv-qty">
+            <button type="button" id="qvMinus">−</button>
+            <input id="qvQty" type="number" min="1" value="1" />
+            <button type="button" id="qvPlus">+</button>
+          </div>
+
+          <button type="button" id="qvAdd" class="qv-add">Add to Cart</button>
+          <button type="button" id="qvBuy" class="qv-buy">Buy</button>
+        </div>
+
+        <div class="qv-footnote">COA included • Research use only</div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -779,6 +936,105 @@
       toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2400);
     }
 
+    // Quick View Modal
+    let currentQV = null;
+
+    const overlay = document.getElementById("qbOverlay");
+    const modal = document.getElementById("quickView");
+
+    const qvImg = document.getElementById("qvImg");
+    const qvCat = document.getElementById("qvCat");
+    const qvName = document.getElementById("qvName");
+    const qvSub = document.getElementById("qvSub");
+    const qvPrice = document.getElementById("qvPrice");
+    const qvDesc = document.getElementById("qvDesc");
+
+    const qvQty = document.getElementById("qvQty");
+    document.getElementById("qvMinus").onclick = () => qvQty.value = Math.max(1, (+qvQty.value||1) - 1);
+    document.getElementById("qvPlus").onclick = () => qvQty.value = (+qvQty.value||1) + 1;
+
+    function openQuickView(product){
+      currentQV = product;
+
+      qvImg.src = product.image || "";
+      qvImg.alt = `${product.name} ${product.mg || ""}`.trim();
+
+      qvCat.textContent = (product.category || "").toUpperCase();
+      qvName.textContent = product.name;
+      qvSub.textContent = product.subtitle || product.mg || "";
+      qvPrice.textContent = formatMoney(product.price);
+
+      qvDesc.textContent = product.description || "Premium research-grade peptide. Third-party tested with Certificate of Analysis included. For research use only.";
+
+      qvQty.value = 1;
+
+      overlay.style.display = "block";
+      modal.style.display = "block";
+      modal.setAttribute("aria-hidden","false");
+    }
+
+    function closeQuickView(){
+      overlay.style.display = "none";
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden","true");
+      currentQV = null;
+    }
+    overlay.onclick = closeQuickView;
+    document.getElementById("qvClose").onclick = closeQuickView;
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeQuickView(); });
+
+    // Buttons inside modal
+    document.getElementById("qvAdd").onclick = () => {
+      if (!currentQV) return;
+      addToCart(currentQV.id, +qvQty.value || 1);
+      closeQuickView();
+      toast("Added to cart", `${currentQV.name}${currentQV.mg ? " • " + currentQV.mg : ""}`);
+    };
+
+    document.getElementById("qvBuy").onclick = async () => {
+      if (!currentQV) return;
+      const qty = +qvQty.value || 1;
+      addToCart(currentQV.id, qty);
+
+      // Preview-only if no key
+      if (!STRIPE_PUBLISHABLE_KEY) {
+        closeQuickView();
+        toast("Added to cart", "Stripe preview mode - add your key to enable checkout.");
+        return;
+      }
+
+      // Real Stripe checkout
+      const btn = document.getElementById("qvBuy");
+      btn.disabled = true;
+      btn.textContent = "Loading…";
+
+      try {
+        const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
+        const res = await fetch(CHECKOUT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: [{ id: currentQV.id, quantity: qty }],
+          })
+        });
+
+        if (!res.ok) throw new Error("Checkout endpoint failed");
+        const data = await res.json();
+        if (!data || !data.sessionId) throw new Error("Missing sessionId");
+
+        const { error } = await stripe.redirectToCheckout({ sessionId: data.sessionId });
+        if (error) throw error;
+
+      } catch (err) {
+        console.error(err);
+        closeQuickView();
+        toast("Stripe not connected yet", "Hook /api/checkout in your Worker to create Checkout Sessions.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Buy";
+      }
+    };
+
     // Rendering
     let activeCategory = "all";
 
@@ -873,21 +1129,25 @@
           </div>
         `;
 
-        // Prevent navigation when clicking buttons
+        // Open quick view on card click
         a.addEventListener("click", (e) => {
           const btn = e.target.closest("button");
-          if (!btn) return;
-          e.preventDefault();
 
-          const action = btn.dataset.action;
-          if (action === "view") {
-            toast("Opening product…", `${p.name}${p.mg ? " • " + p.mg : ""}`);
-            window.location.href = a.href; // keep simple
+          // If View button clicked, allow navigation
+          if (btn && btn.dataset.action === "view") {
+            return; // let it navigate
+          }
+
+          // If Buy button clicked, handle purchase
+          if (btn && btn.dataset.action === "buy") {
+            e.preventDefault();
+            handleBuy(p, btn);
             return;
           }
-          if (action === "buy") {
-            handleBuy(p, btn);
-          }
+
+          // Otherwise, open quick view
+          e.preventDefault();
+          openQuickView(p);
         });
 
         grid.appendChild(a);
