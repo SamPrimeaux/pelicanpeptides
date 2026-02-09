@@ -843,13 +843,16 @@
 
   <script>
     /**
-     * Stripe Integration (Preview + Ready-to-wire)
+     * Payments (Square or Stripe)
      * ------------------------------------------------
-     * Mode A (Preview): no keys needed; shows UI + stores cart locally.
-     * Mode B (Real Checkout): set STRIPE_PUBLISHABLE_KEY and have /api/checkout create sessions server-side.
+     * - Square (recommended here): calls a Pages Function that creates a Square hosted checkout link and redirects.
+     * - Stripe (legacy/optional): set STRIPE_PUBLISHABLE_KEY and have /api/checkout create sessions server-side.
      */
+    const PAYMENT_PROVIDER = "square"; // "square" | "stripe"
+
     const STRIPE_PUBLISHABLE_KEY = ""; // TODO: put your Stripe publishable key here later (pk_live_... or pk_test_...)
     const CHECKOUT_ENDPOINT = "/api/checkout"; // Worker endpoint that creates a Stripe Checkout Session
+    const SQUARE_CHECKOUT_ENDPOINT = "/api/square/checkout"; // Pages Function endpoint (creates Square payment links)
 
     const R2_PRODUCTS = "https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/";
 
@@ -983,6 +986,36 @@
     document.getElementById("qvClose").onclick = closeQuickView;
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeQuickView(); });
 
+    async function startSquareCheckout(items, buttonEl){
+      if (buttonEl) {
+        buttonEl.disabled = true;
+        buttonEl.textContent = "Loading…";
+      }
+
+      try {
+        const res = await fetch(SQUARE_CHECKOUT_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ items })
+        });
+
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || !data.url) {
+          throw new Error((data && data.error) ? data.error : "Square checkout failed");
+        }
+
+        window.location.assign(data.url);
+      } catch (err) {
+        console.error(err);
+        toast("Square checkout unavailable", "Confirm Square secrets + /api/square/checkout are configured.");
+      } finally {
+        if (buttonEl) {
+          buttonEl.disabled = false;
+          buttonEl.textContent = "Buy";
+        }
+      }
+    }
+
     // Buttons inside modal
     document.getElementById("qvAdd").onclick = () => {
       if (!currentQV) return;
@@ -995,6 +1028,12 @@
       if (!currentQV) return;
       const qty = +qvQty.value || 1;
       addToCart(currentQV.id, qty);
+
+      if (PAYMENT_PROVIDER === "square") {
+        const btn = document.getElementById("qvBuy");
+        await startSquareCheckout([{ id: currentQV.id, quantity: qty }], btn);
+        return;
+      }
 
       // Preview-only if no key
       if (!STRIPE_PUBLISHABLE_KEY) {
@@ -1160,6 +1199,11 @@
     async function handleBuy(product, buttonEl){
       addToCart(product.id, 1);
       toast("Added to cart", `${product.name}${product.mg ? " • " + product.mg : ""}`);
+
+      if (PAYMENT_PROVIDER === "square") {
+        await startSquareCheckout([{ id: product.id, quantity: 1 }], buttonEl);
+        return;
+      }
 
       // Preview-only if no key
       if (!STRIPE_PUBLISHABLE_KEY) {
