@@ -1,59 +1,136 @@
-# pelicanpeptides help me build a fully styled html product page for my clients pelicanpeptides.com --- the product list is 
-Tirzepatide 10mg $120.
-Tirzepatide 20mg $140.
-Tirzepatide 30mg $160.
-Retatrutide 20mg $140.
-Retatrutide 30mg &160.
-Cagrilintide 5mg 50.
-Lipo-C 10ml. 80.
+Useful Links
+Square PHP SDK
+Web Payments SDK Overview
+Web Payments SDK Reference
+Payments API Reference
+Payment processing example: PHP
+There are two sections in this README.
 
-Ipamorelin 5mg $30.
-Sermorelin 10mg $50.
-Tesamorelin 10mg 65.
+Setup - Provides instructions for you to download and run the app.
+Application Flow - Provides an overview of how the Square Web Payments SDK integrates in the PHP example.
+Setup
+Requirements
+8.0 <= PHP < 8.2
+Install the PHP client library
+This sample already includes the square/square dependency in its composer.json file. To install the client library:
 
+Make sure you've downloaded Composer, following the instructions here.
 
+Run the following command from the directory containing composer.json:
 
-NAD+ 500mg $60.00
-GHK-CU 100mg $50.
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/GHL-CU-100mg.PNG 
+php composer.phar install
+Specify your application credentials
+In order for the example to work, you must create a new file .env by copying the contents of the .env.example file. Edit this file with your application credentials and environment configuration. WARNING: never save your credentials in your code.
 
-B-12 10ml 50.00
-Superhuman Blend 10ml 90.00
+Open your developer dashboard. Now supply either production, sandbox, or both credentials. Open this file and update the following variables:
 
-BPC-157 10mg $45. 
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/BPC-157-10mg.PNG 
+WARNING: never upload .env with your credential/access_token
+Variable	Type	Description
+ENVIRONMENT	string	production or sandbox depending on what type of endpoint you want to hit. For testing purposes please use the sandbox mode (already configured in the .env)
+SQUARE_APPLICATION_ID	string	Application ID found on your Developer App Dashboard, Credentials tab. Must match the corresponding ENVIRONMENT.
+SQUARE_ACCESS_TOKEN	string	Access Token found at the Developer App Dashboard, Credentials tab. Must match the corresponding ENVIRONMENT.
+SQUARE_LOCATION_ID	string	Location found at the Developer App Dashboard, Location tab. Must match the corresponding ENVIRONMENT.
+Running the sample
+From the sample's root directory, run:
 
-GLP - 2 
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/GLP-2.PNG 
+php -S localhost:8888
+You can then visit localhost:8888 in your browser to see the payment form.
 
-GLP-3
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/GLP-3-10mg.webp 
+If you're using your sandbox credentials, you can test a valid credit card payment by providing the following card information in the form:
 
+Card Number 4111 1111 1111 1111
+Card CVV 111
+Card Expiration (Any time in the future)
+Card Postal Code (Any valid US postal code)
+You can find more testing values in this article.
 
-IPAMORELIN
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/IPAMORELIN-5mg.webp 
+Note that if you are not using your sandbox credentials and you enter real credit card information, YOU WILL CHARGE THE CARD.
 
-NAD+
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/NAD%2B-500mg.PNG 
+Application Flow
+This PHP web application implements the Square Online payment solution to charge a payment source (debit card, credit card, ACH transfers, and digital wallet payment methods).
 
-sermorelin-10MG 
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/sermorelin-10MG.PNG 
+Square Online payment solution is a 2-step process:
 
+Generate a token - Use the Square Web Payments SDK to accept payment source information and generate a secure payment token.
 
-TB500 10mg $45.
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/TB-500-10mg.PNG 
+NOTE: The Web Payments SDK renders the card inputs and digital wallet buttons that make up the payment form and returns a secure payment token. For more information, see the Web Payments SDK Overview.
 
-cagrilintide-5mg.PNG 
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/cagrilintide-5mg.PNG 
+Charge the payment source using the token - Using a server-side component, that uses the Connect V2 Payments API, you charge the payment source using the secure payment token.
 
-GLOW 70MG 
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/glow-70mg.webp 
+The following sections describe how the PHP sample implements these steps.
 
-TESAMORELIN  10MG
-https://pub-0c8b66f475944ade969c5e90bf13d409.r2.dev/Products/tesamorelin-10.mg.PNG 
+Step 1: Generate a Token
+When the page loads it renders the form defined in the index.php file. The page also downloads and executes the following scripts:
 
+Square Web Payments SDK - It is a library that provides the Payment objects you use in sq-payment-flow.js. For more information about the library, see Web Payments SDK Reference.
 
-BPC-157/TB-500 10mg/10mg 80.00
+sq-payment-flow.js - This code provides two things:
 
-Bac water 3ml 6.00 ------- here are each of the product pub urls ( stored in cloudflare r2 currently , advise if i need to use cloudflare images or if it doesnt matter ) 
- 
+Initializes objects for various supported payment methods including card payments, bank payments, and digital wallet payments. Each of the following files handles unique client logic for a specific payment method to generate a payment token:
+
+sq-card-pay.js
+sq-ach.js
+sq-google-pay.js
+sq-apple-pay.js
+Provides the global method that fires a fetch request to the server after receiving the payment token.
+
+window.createPayment = async function (token) {
+  const dataJsonString = JSON.stringify({
+    token,
+  });
+
+  try {
+    const response = await fetch("process-payment", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: dataJsonString,
+    });
+
+    const data = await response.json();
+
+    if (data.errors && data.errors.length > 0) {
+      if (data.errors[0].detail) {
+        window.showError(data.errors[0].detail);
+      } else {
+        window.showError("Payment Failed.");
+      }
+    } else {
+      window.showSuccess("Payment Successful!");
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+Step 2: Charge the Payment Source Using the Token
+All the remaining actions take place in the process-payment.php file. This server-side component uses the Square PHP SDK library to call the Connect V2 Payments API to charge the payment source using the token as shown in the following code fragment.
+
+...
+$square_client = new SquareClient([
+  'accessToken' => $access_token,
+  'environment' => getenv('ENVIRONMENT')
+]);
+
+$payments_api = $square_client->getPaymentsApi();
+
+$money = new Money();
+$money->setAmount(100);
+// Set currency to the currency for the location
+$money->setCurrency($location_info->getCurrency());
+
+// Every payment you process with the SDK must have a unique idempotency key.
+// If you're unsure whether a particular payment succeeded, you can reattempt
+// it with the same idempotency key without worrying about double charging
+// the buyer.
+$create_payment_request = new CreatePaymentRequest($token, Uuid::uuid4(), $money);
+
+$response = $payments_api->createPayment($create_payment_request);
+
+if ($response->isSuccess()) {
+  echo json_encode($response->getResult());
+} else {
+  echo json_encode($response->getErrors());
+}
+...
+
