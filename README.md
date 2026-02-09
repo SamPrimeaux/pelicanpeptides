@@ -1,10 +1,10 @@
-## Pelican Peptides (Cloudflare Pages)
+## Pelican Peptides (Cloudflare Worker + R2)
 
-This project is deployed as a **Cloudflare Pages** site (static HTML + **Pages Functions**).
+Your production setup (per routes like `pelicanpeptides.com/*`) is a **Cloudflare Worker** that serves the site from **R2** and exposes `/api/*` endpoints.
 
 ## Square checkout (hosted checkout link)
 
-This repo includes a minimal Square integration that runs in the **Workers runtime** (edge-safe, `fetch` only):
+This repo includes a minimal Square integration that runs in the **Workers runtime** (edge-safe, `fetch` only) using **Square Payment Links** (hosted checkout):
 
 - **Endpoint**: `POST /api/square/checkout`
 - **What it does**: creates a Square **payment link** using your Square credentials and returns `{ url }`.
@@ -12,7 +12,7 @@ This repo includes a minimal Square integration that runs in the **Workers runti
 
 ### Configure Square secrets (Cloudflare)
 
-Set these on your Pages project (do **not** hardcode them in code):
+Set these on your **Worker** (do **not** hardcode them in code):
 
 - `SQUARE_ACCESS_TOKEN` (secret)
 - `SQUARE_LOCATION_ID` (secret)
@@ -21,15 +21,17 @@ Set these on your Pages project (do **not** hardcode them in code):
 Using Wrangler:
 
 ```bash
-npx wrangler pages secret put SQUARE_ACCESS_TOKEN
-npx wrangler pages secret put SQUARE_LOCATION_ID
-npx wrangler pages secret put SQUARE_ENVIRONMENT
+npx wrangler secret put SQUARE_ACCESS_TOKEN
+npx wrangler secret put SQUARE_LOCATION_ID
+# for plaintext vars, set in dashboard or in `wrangler.worker.toml`:
+# SQUARE_ENVIRONMENT=sandbox|production
 ```
 
 Optional:
 
 - `SQUARE_API_VERSION` (Square API version header; if unset, it’s omitted)
 - `SQUARE_DEFAULT_CURRENCY` (defaults to `USD`)
+- `SITE_ORIGIN` (already present in your Worker vars; used for Square redirect URL)
 
 ### API usage
 
@@ -53,6 +55,10 @@ Convenience redirect:
 
 - `GET /api/square/checkout?id=tirz-10&quantity=1` (responds with a `303` redirect to Square checkout)
 
+### Debugging
+
+- `GET /api/square/locations` lists Square locations (useful for confirming `SQUARE_ACCESS_TOKEN` works)
+
 ### Return page
 
 After payment, Square redirects back to:
@@ -63,6 +69,13 @@ Note: this is a landing page only. If you need “paid order confirmation,” ad
 
 ## Security note (important)
 
-The server uses a minimal in-code catalog (`functions/_lib/catalog.js`) to prevent client-side price tampering.
-In a production setup, this should come from your authoritative store (for example **D1**) instead of code.
+The Worker attempts to read product pricing from **D1** (`products` table, if present). If that lookup fails (schema mismatch), it falls back to an in-code catalog in `src/lib/catalog.ts`.
+
+## Deploy (Worker)
+
+If you deploy from this repo, use the dedicated Worker config:
+
+```bash
+npx wrangler deploy --config wrangler.worker.toml
+```
 
