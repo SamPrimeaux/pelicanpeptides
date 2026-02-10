@@ -9806,10 +9806,10 @@ async function serveFromR2(env, filename) {
             "frame-ancestors 'self'",
             "form-action 'self'",
             "img-src 'self' https: data: blob:",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://web.squarecdn.com",
             "font-src 'self' https://fonts.gstatic.com data:",
             "script-src 'self' 'unsafe-inline' https://web.squarecdn.com https://static.cloudflareinsights.com",
-            "connect-src 'self' https://connect.squareup.com https://pci-connect.squareup.com https://api.squareup.com https://connect.squareupsandbox.com https://pci-connect.squareupsandbox.com https://api.squareupsandbox.com",
+            "connect-src 'self' https://connect.squareup.com https://pci-connect.squareup.com https://api.squareup.com https://connect.squareupsandbox.com https://pci-connect.squareupsandbox.com https://api.squareupsandbox.com https://o160250.ingest.sentry.io",
             "frame-src 'self' https://*.squarecdn.com https://*.squareup.com https://*.squareupsandbox.com",
             "worker-src 'self' blob:",
             "upgrade-insecure-requests"
