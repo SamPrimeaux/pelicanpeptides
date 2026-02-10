@@ -9796,6 +9796,26 @@ async function serveFromR2(env, filename) {
     if (filename.endsWith(".html")) {
       headers.set("Content-Type", "text/html; charset=utf-8");
       headers.set("Cache-Control", "public, max-age=60");
+      if (filename === "checkout.html") {
+        headers.set(
+          "Content-Security-Policy",
+          [
+            "default-src 'self'",
+            "base-uri 'self'",
+            "object-src 'none'",
+            "frame-ancestors 'self'",
+            "form-action 'self'",
+            "img-src 'self' https: data: blob:",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "font-src 'self' https://fonts.gstatic.com data:",
+            "script-src 'self' 'unsafe-inline' https://web.squarecdn.com https://static.cloudflareinsights.com",
+            "connect-src 'self' https://connect.squareup.com https://pci-connect.squareup.com https://api.squareup.com https://connect.squareupsandbox.com https://pci-connect.squareupsandbox.com https://api.squareupsandbox.com",
+            "frame-src 'self' https://*.squarecdn.com https://*.squareup.com https://*.squareupsandbox.com",
+            "worker-src 'self' blob:",
+            "upgrade-insecure-requests"
+          ].join("; ")
+        );
+      }
     } else if (filename.endsWith(".css")) {
       headers.set("Content-Type", "text/css");
       headers.set("Cache-Control", "public, max-age=31536000");

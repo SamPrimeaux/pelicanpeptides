@@ -39,6 +39,7 @@ RECEIPT_TEST_TO = "meauxbility@gmail.com"
 SHIP_FROM_NAME = "Pelican Peptides"
 STRIPE_MODE = "test"
 SQUARE_ENVIRONMENT = "production"
+SQUARE_APPLICATION_ID = "sq0idp-n-cr4zjumXYGk4lWFZqECQ"
 
 [[r2_buckets]]
 binding = "R2_ASSETS"
