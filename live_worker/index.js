@@ -8767,8 +8767,17 @@ ${projectNotes.slice(0, 1500)}` : "";
         return jsonResponse({ success: true, order_number: orderNumber, payment_id: paymentId }, 200, corsHeaders);
       }
       if (path === "/api/square/catalog/sync" && request.method === "POST") {
-        const auth = await getAuthFromRequest(request, env);
-        if (!auth) return jsonResponse({ success: false, error: "Unauthorized" }, 401, corsHeaders);
+        let authorized = false;
+        const bearer = request.headers.get("Authorization") || "";
+        if (env.SQUARE_SYNC_TOKEN && typeof env.SQUARE_SYNC_TOKEN === "string" && bearer.startsWith("Bearer ")) {
+          const token = bearer.slice(7).trim();
+          if (token && token === env.SQUARE_SYNC_TOKEN) authorized = true;
+        }
+        if (!authorized) {
+          const auth = await getAuthFromRequest(request, env);
+          authorized = !!auth;
+        }
+        if (!authorized) return jsonResponse({ success: false, error: "Unauthorized" }, 401, corsHeaders);
         if (!env.SQUARE_ACCESS_TOKEN || !env.SQUARE_LOCATION_ID) {
           return jsonResponse({ success: false, error: "Square is not configured" }, 503, corsHeaders);
         }
