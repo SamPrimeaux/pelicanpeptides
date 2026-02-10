@@ -1,0 +1,25 @@
+name = "mcp-pelicanpeptides"
+main = "src/worker.ts"
+compatibility_date = "2026-01-20"
+
+# This repo contains legacy Pages config in `wrangler.json`.
+# Cloudflare CI is running `npx wrangler deploy` (Workers deploy), so we provide this
+# Worker config as the default Wrangler config to avoid:
+# "Workers-specific command in a Pages project."
+
+workers_dev = true
+
+[vars]
+SITE_ORIGIN = "https://pelicanpeptides.com"
+SQUARE_ENVIRONMENT = "production" # or "sandbox"
+SQUARE_DEFAULT_CURRENCY = "USD"
+
+[[r2_buckets]]
+binding = "R2_ASSETS"
+bucket_name = "pelicanpeptides"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pelicanpeptides"
+database_id = "7c917568-399a-4b53-85e5-a1430c24edbf"
+
