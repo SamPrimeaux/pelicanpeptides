@@ -1,7 +1,7 @@
 import { html, json, text, withCors } from "./lib/http";
 import { isNonEmptyString, parsePositiveInt } from "./lib/validation";
 import { createSquarePaymentLink, listSquareLocations } from "./lib/square";
-import { getProductById } from "./lib/products";
+import { getProductByKey } from "./lib/products";
 
 type Env = {
   // Existing bindings (from your Worker settings)
@@ -120,7 +120,7 @@ async function handleSquareCheckout(request: Request, env: Env) {
   // Convenience GET: redirect directly to hosted checkout
   if (request.method === "GET") {
     const u = new URL(request.url);
-    const id = u.searchParams.get("id");
+    const id = u.searchParams.get("id") || u.searchParams.get("slug") || u.searchParams.get("product");
     const quantity = parsePositiveInt(u.searchParams.get("quantity") || "1", { min: 1, max: 99 });
 
     if (!id) {
@@ -142,8 +142,8 @@ async function handleSquareCheckout(request: Request, env: Env) {
     if (!quantity) return withCors(json({ ok: false, error: "Invalid quantity" }, { status: 400 }), request);
 
     try {
-      const product = await getProductById({
-        id,
+      const product = await getProductByKey({
+        key: id,
         db: env.DB,
         defaultCurrency: env.SQUARE_DEFAULT_CURRENCY || "USD",
       });
@@ -176,17 +176,34 @@ async function handleSquareCheckout(request: Request, env: Env) {
   if (!items || items.length === 0) return withCors(json({ ok: false, error: "No items provided" }, { status: 400 }), request);
 
   try {
+    // Optional: where Square redirects after payment. Only allow same-origin relative paths.
+    const origin =
+      typeof env.SITE_ORIGIN === "string" && env.SITE_ORIGIN.startsWith("http")
+        ? env.SITE_ORIGIN
+        : new URL(request.url).origin;
+    let redirectUrl: string | undefined = undefined;
+    if (typeof body?.return_path === "string" && body.return_path.startsWith("/")) {
+      redirectUrl = new URL(body.return_path, origin).toString();
+    } else if (typeof body?.return_url === "string") {
+      try {
+        const u = new URL(body.return_url);
+        if (u.origin === new URL(origin).origin) redirectUrl = u.toString();
+      } catch {
+        // ignore
+      }
+    }
+
     const resolved: { item: any; quantity: number }[] = [];
 
     for (const it of items) {
-      const id = it?.id;
+      const id = it?.id || it?.slug || it?.productId || it?.product || it?.handle;
       const quantity = parsePositiveInt(it?.quantity, { min: 1, max: 99 });
       if (!isNonEmptyString(id) || !quantity) {
         return withCors(json({ ok: false, error: "Invalid items payload" }, { status: 400 }), request);
       }
 
-      const product = await getProductById({
-        id,
+      const product = await getProductByKey({
+        key: id,
         db: env.DB,
         defaultCurrency: env.SQUARE_DEFAULT_CURRENCY || "USD",
       });
@@ -194,7 +211,7 @@ async function handleSquareCheckout(request: Request, env: Env) {
       resolved.push({ item: product, quantity });
     }
 
-    const result = await createSquarePaymentLink({ request, env, items: resolved });
+    const result = await createSquarePaymentLink({ request, env, items: resolved, redirectUrl });
 
     return withCors(
       json(

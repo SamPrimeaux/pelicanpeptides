@@ -39,8 +39,9 @@ export async function createSquarePaymentLink(opts: {
   request: Request;
   env: SquareEnv;
   items: SquareLineItemInput[];
+  redirectUrl?: string;
 }): Promise<{ url: string; paymentLinkId?: string; orderId?: string; raw: unknown }> {
-  const { request, env, items } = opts;
+  const { request, env, items, redirectUrl } = opts;
   const locationId = requireEnv(env, "SQUARE_LOCATION_ID");
 
   if (!items.length) throw new Error("No items provided.");
@@ -79,7 +80,7 @@ export async function createSquarePaymentLink(opts: {
       line_items: lineItems,
     },
     checkout_options: {
-      redirect_url: new URL("/square/return", origin).toString(),
+      redirect_url: redirectUrl || new URL("/square/return", origin).toString(),
     },
   };
 

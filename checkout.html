@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout - Pelican Peptides</title>
+  <meta name="description" content="Complete your order. Pelican Peptides – research use only." />
+  <style>
+    :root {
+      --primary: #004E8A;
+      --secondary: #0077BE;
+      --primary-dark: #0A1F44;
+      --gray-100: #F8F9FA;
+      --gray-200: #E9ECEF;
+      --gray-500: #6C757D;
+      --gray-800: #343a40;
+      --white: #fff;
+      --clay: rgba(255,255,255,0.88);
+      --clay-border: rgba(255,255,255,0.55);
+      --clay-inner: inset 0 2px 6px rgba(255,255,255,0.6);
+      --shadow-soft: 0 12px 40px rgba(0,78,138,0.08);
+      --radius-clay: 20px;
+      --radius-sm: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--gray-800);
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: var(--gray-100);
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(105deg, transparent 0, transparent 72px, rgba(0,78,138,.045) 72px, rgba(0,78,138,.045) 73px),
+        linear-gradient(180deg, #f0f7ff 0%, #fafcff 28%, #f5f9ff 58%, #eef6ff 100%),
+        radial-gradient(ellipse 100% 80% at 20% 10%, rgba(0,78,138,.08), transparent 50%),
+        radial-gradient(ellipse 80% 100% at 85% 90%, rgba(0,119,190,.06), transparent 50%),
+        radial-gradient(ellipse 100% 60% at 50% 95%, rgba(0,78,138,.04), transparent 50%);
+    }
+    @media (prefers-reduced-motion: reduce) { body::before { position: absolute; } }
+    header { background: var(--white); border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+    nav { max-width: 1400px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 72px; }
+    .logo { display: flex; align-items: center; text-decoration: none; }
+    .logo img { height: 48px; width: auto; max-height: 48px; object-fit: contain; object-position: left center; display: block; }
+    .nav-links { display: flex; gap: 40px; list-style: none; }
+    .nav-links a { text-decoration: none; color: #1a1a1a; font-weight: 500; font-size: 15px; }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-links a.active { color: var(--primary); }
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .user-icon-link { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--gray-200); color: var(--gray-800); text-decoration: none; transition: border-color 0.2s, color 0.2s; }
+    .user-icon-link:hover { border-color: var(--primary); color: var(--primary); }
+    .user-icon-link svg { width: 20px; height: 20px; }
+    .cart-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; background: var(--white); border: 1px solid var(--gray-200); color: var(--primary); font-weight: 500; font-size: 14px; text-decoration: none; transition: border-color 0.2s, color 0.2s, background 0.2s; }
+    .cart-link:hover { border-color: var(--primary); background: var(--gray-100); color: var(--primary); }
+    .cart-link svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .footer { background: var(--primary); color: var(--white); padding: 60px 32px 32px; margin-top: auto; }
+    .footer-content { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 60px; margin-bottom: 40px; }
+    .footer-brand img { height: 48px; width: auto; max-height: 48px; object-fit: contain; margin-bottom: 16px; display: block; }
+    .footer-brand p { color: rgba(255,255,255,0.8); font-size: 14px; line-height: 1.6; max-width: 360px; }
+    .footer-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .footer-section ul { list-style: none; }
+    .footer-section ul li { margin-bottom: 12px; }
+    .footer-section a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; }
+    .footer-section a:hover { color: white; }
+    .footer-bottom { max-width: 1400px; margin: 0 auto; padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: rgba(255,255,255,0.6); font-size: 13px; }
+    @media (max-width: 768px) { .nav-links { display: none; } nav { padding: 0 20px; height: 64px; } .logo img { height: 40px; } .footer-content { grid-template-columns: 1fr; } }
+
+    main { flex: 1; padding: 40px 32px 60px; }
+    .checkout-container { max-width: 1100px; margin: 0 auto; }
+    .stepper { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 40px; flex-wrap: wrap; }
+    .stepper-step { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--gray-500); }
+    .stepper-step.active { color: var(--primary); font-weight: 600; }
+    .stepper-step.done { color: var(--gray-800); }
+    .stepper-sep { width: 24px; height: 1px; background: var(--gray-200); }
+    .checkout-wrap { display: grid; grid-template-columns: 1fr 360px; gap: 40px; align-items: start; }
+    @media (max-width: 900px) { .checkout-wrap { grid-template-columns: 1fr; } }
+    .checkout-form {
+      background: var(--clay);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: var(--radius-clay);
+      padding: 32px;
+      box-shadow: var(--shadow-soft), var(--clay-inner);
+      border: 1px solid var(--clay-border);
+    }
+    .checkout-form h2 { font-size: 1.25rem; color: var(--primary-dark); margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; color: var(--gray-800); margin-bottom: 6px; }
+    .form-group label .optional { font-weight: 400; color: var(--gray-500); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 15px; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,78,138,0.15); }
+    .form-group input.error, .form-group select.error { border-color: #c00; }
+    .form-group .error-msg { font-size: 13px; color: #c00; margin-top: 4px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .ack-group { margin: 24px 0; padding: 16px; background: var(--gray-100); border-radius: 8px; border: 1px solid var(--gray-200); }
+    .ack-group label { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--gray-800); cursor: pointer; margin-bottom: 12px; }
+    .ack-group label:last-child { margin-bottom: 0; }
+    .ack-group input { margin-top: 3px; flex-shrink: 0; }
+    .btn-confirm { width: 100%; padding: 16px 24px; background: var(--primary); color: var(--white); border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+    .btn-confirm:hover:not(:disabled) { background: var(--secondary); }
+    .btn-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .checkout-summary {
+      background: var(--clay);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-radius: var(--radius-clay);
+      padding: 24px;
+      box-shadow: var(--shadow-soft), var(--clay-inner);
+      border: 1px solid var(--clay-border);
+      position: sticky;
+      top: 96px;
+    }
+    @media (max-width: 900px) { .checkout-summary { position: static; } .checkout-summary.collapsible .summary-body { display: none; } .checkout-summary.collapsible.open .summary-body { display: block; } .summary-toggle { display: block; } }
+    .summary-toggle { display: none; width: 100%; padding: 14px 16px; background: var(--gray-100); border: 1px solid var(--gray-200); border-radius: 8px; font-size: 15px; font-weight: 500; color: var(--primary-dark); cursor: pointer; text-align: left; margin-bottom: 12px; }
+    .summary-toggle:hover { background: var(--gray-200); }
+    .checkout-summary h3 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 16px; }
+    .summary-items { max-height: 280px; overflow-y: auto; margin-bottom: 16px; }
+    .summary-item { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-item img { width: 56px; height: 56px; object-fit: contain; background: var(--gray-100); border-radius: 8px; flex-shrink: 0; }
+    .summary-item-info { flex: 1; min-width: 0; }
+    .summary-item-name { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+    .summary-item-variant { font-size: 12px; color: var(--gray-500); }
+    .summary-item-qty { font-size: 13px; color: var(--gray-500); }
+    .summary-item-total { font-size: 14px; font-weight: 600; color: var(--primary); }
+    .summary-item-remove { padding: 6px 10px; font-size: 12px; background: transparent; color: var(--gray-500); border: 1px solid var(--gray-200); border-radius: 8px; cursor: pointer; transition: color 0.2s, border-color 0.2s; }
+    .summary-item-remove:hover { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+    .summary-totals { border-top: 1px solid var(--gray-200); padding-top: 16px; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+    .summary-row.total { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); margin-top: 12px; margin-bottom: 0; }
+
+    .checkout-empty { text-align: center; padding: 60px 24px; background: var(--white); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid var(--gray-200); }
+    .checkout-empty h2 { font-size: 1.5rem; color: var(--primary-dark); margin-bottom: 12px; }
+    .checkout-empty p { color: var(--gray-500); margin-bottom: 24px; }
+    .checkout-empty a { display: inline-block; background: var(--primary); color: var(--white); padding: 14px 28px; border-radius: 8px; font-weight: 500; text-decoration: none; }
+    .checkout-empty a:hover { background: var(--secondary); }
+    .submit-error { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; display: none; }
+    .submit-error.visible { display: block; }
+    .legal-notice-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(10, 31, 68, 0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 24px; overflow-y: auto; }
+    .legal-notice-overlay.legal-notice--hidden { display: none !important; }
+    .legal-notice-modal { background: var(--white); border-radius: 12px; max-width: 520px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.35); border: 1px solid var(--gray-200); padding: 0; }
+    .legal-notice-header { background: #b91c1c; color: var(--white); font-size: 1rem; font-weight: 700; text-align: center; padding: 16px 20px; line-height: 1.3; letter-spacing: 0.02em; }
+    .legal-notice-logo-wrap { display: flex; justify-content: center; padding: 24px 24px 16px; }
+    .legal-notice-logo-wrap img { max-width: 200px; max-height: 64px; width: auto; height: auto; object-fit: contain; display: block; }
+    .legal-notice-body { padding: 0 28px 28px; }
+    .legal-notice-p, .legal-notice-note { font-size: 14px; line-height: 1.55; color: var(--gray-800); margin-bottom: 14px; }
+    .legal-notice-note { margin-bottom: 20px; font-size: 13px; color: var(--gray-500); }
+    .legal-notice-checkbox { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--gray-800); cursor: pointer; margin-bottom: 20px; }
+    .legal-notice-checkbox input { margin-top: 3px; flex-shrink: 0; }
+    .legal-notice-btns { display: flex; flex-direction: column; gap: 10px; }
+    .legal-notice-btn { display: block; width: 100%; padding: 14px 20px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s, opacity 0.2s; }
+    .legal-notice-btn--ack { background: var(--primary); color: var(--white); }
+    .legal-notice-btn--ack:hover:not(:disabled) { background: var(--secondary); }
+    .legal-notice-btn--ack:disabled { opacity: 0.6; cursor: not-allowed; }
+    .legal-notice-btn--decline { background: #0d9488; color: var(--white); }
+    .legal-notice-btn--decline:hover { background: #0f766e; }
+    .chat-widget { position: fixed; bottom: 24px; right: 24px; z-index: 9998; font-family: inherit; }
+    .chat-toggle { width: 56px; height: 56px; border-radius: 50%; background: var(--primary); color: var(--white); border: none; box-shadow: 0 4px 16px rgba(0,78,138,0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s, transform 0.2s; }
+    .chat-toggle:hover { background: var(--secondary); transform: scale(1.05); }
+    .chat-toggle svg { width: 28px; height: 28px; }
+    .chat-panel { display: none; position: absolute; bottom: 64px; right: 0; width: 340px; max-width: calc(100vw - 48px); max-height: 420px; background: var(--white); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 1px solid var(--gray-200); padding: 16px; flex-direction: column; }
+    .chat-panel.open { display: flex; }
+    .chat-panel h3 { font-size: 1rem; font-weight: 600; color: var(--primary-dark); margin-bottom: 4px; }
+    .chat-panel .chat-tagline { font-size: 12px; color: var(--gray-500); margin-bottom: 12px; }
+    .chat-messages { flex: 1; min-height: 120px; max-height: 240px; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { font-size: 13px; padding: 8px 12px; border-radius: 10px; max-width: 90%; word-wrap: break-word; }
+    .chat-msg.user { background: var(--primary); color: var(--white); align-self: flex-end; }
+    .chat-msg.assistant { background: var(--gray-200); color: var(--gray-800); align-self: flex-start; }
+    .chat-typing { font-size: 12px; color: var(--gray-500); margin-bottom: 8px; display: none; }
+    .chat-typing.visible { display: block; }
+    .chat-input-wrap { display: flex; gap: 8px; }
+    .chat-input-wrap input { flex: 1; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; }
+    .chat-input-wrap input:disabled { opacity: 0.7; }
+    .chat-send { padding: 10px 16px; background: var(--primary); color: var(--white); border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; }
+    .chat-send:hover:not(:disabled) { background: var(--secondary); }
+    .chat-send:disabled { opacity: 0.6; cursor: not-allowed; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+  </style>
+</head>
+<body>
+  <div id="legal-notice-overlay" class="legal-notice-overlay legal-notice--hidden" role="dialog" aria-modal="true" aria-labelledby="legal-notice-title">
+    <div class="legal-notice-modal">
+      <div class="legal-notice-header" id="legal-notice-title">IMPORTANT LEGAL NOTICE – PLEASE READ</div>
+      <div class="legal-notice-logo-wrap"><img src="https://imagedelivery.net/g7wf09fCONpnidkRnR_5vw/674cdd91-65f9-4b9c-21ba-bd5fc0f4c500/avatar" alt="Pelican Peptides" /></div>
+      <div class="legal-notice-body">
+        <p class="legal-notice-p">The products on this website are for legitimate research use only. They are not intended to prevent, treat, or cure any illness or disease and are not intended for human consumption. By accessing this site, you acknowledge that you are at least 21 years of age, understand these terms, and have a legitimate research basis for buying these products.</p>
+        <p class="legal-notice-note">NOTE: All of our compounds are sold individually, and DO NOT include research supplies such as bacteriostatic water or syringes. Most are sold in powder form and require reconstitution with a suitable diluent solution prior to research.</p>
+        <label class="legal-notice-checkbox"><input type="checkbox" id="legal-ack-checkbox" /> I confirm I am a valid researcher, at least 21 years of age, and understand these terms.</label>
+        <div class="legal-notice-btns">
+          <button type="button" class="legal-notice-btn legal-notice-btn--ack" id="legal-ack-btn" disabled>Acknowledge</button>
+          <button type="button" class="legal-notice-btn legal-notice-btn--decline" id="legal-decline-btn">Decline</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>(function(){var AGE_ACK_KEY='pelican_age_ack';var CHECKOUT_ACK_KEY='pelican_age_ack_checkout';var THIRTY_DAYS_MS=30*24*60*60*1000;var DECLINE_URL='https://www.google.com/search?q=google.com';var o=document.getElementById('legal-notice-overlay');var c=document.getElementById('legal-ack-checkbox');var ack=document.getElementById('legal-ack-btn');var dec=document.getElementById('legal-decline-btn');function shouldShow(){try{var raw=localStorage.getItem(AGE_ACK_KEY);if(!raw)return true;var ts=parseInt(raw,10);if(isNaN(ts))return true;return (Date.now()-ts)>THIRTY_DAYS_MS;}catch(e){return true;}}if(c)c.addEventListener('change',function(){if(ack)ack.disabled=!c.checked;});if(ack&&c)ack.addEventListener('click',function(){if(!c.checked)return;try{localStorage.setItem(AGE_ACK_KEY,String(Date.now()));localStorage.setItem(CHECKOUT_ACK_KEY,String(Date.now()));}catch(e){}if(o)o.classList.add('legal-notice--hidden');});if(dec)dec.addEventListener('click',function(){window.location.href=DECLINE_URL;});setTimeout(function(){if(o&&shouldShow())o.classList.remove('legal-notice--hidden');},5000);})();</script>
+  <header>
+    <nav>
+      <a href="/" class="logo"><img src="https://imagedelivery.net/g7wf09fCONpnidkRnR_5vw/674cdd91-65f9-4b9c-21ba-bd5fc0f4c500/avatar" alt="Pelican Peptides" /></a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <li><a href="/quality">Quality</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="/login" class="user-icon-link" aria-label="Log in / Account">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        </a>
+        <a href="/cart" class="cart-link active" aria-label="Cart">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+          <span id="cart-count">(0)</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="checkout-container">
+      <div class="stepper" aria-label="Checkout progress">
+        <span class="stepper-step done">Cart</span>
+        <span class="stepper-sep" aria-hidden="true"></span>
+        <span class="stepper-step active">Checkout</span>
+        <span class="stepper-sep" aria-hidden="true"></span>
+        <span class="stepper-step">Confirmation</span>
+      </div>
+
+      <div id="checkout-empty" class="checkout-empty" style="display: none;">
+        <h2>Your cart is empty</h2>
+        <p>Add items from the catalog before checkout.</p>
+        <a href="/products">View catalog</a>
+      </div>
+
+      <div id="checkout-content" class="checkout-wrap">
+        <div class="checkout-form">
+          <h2>Shipping &amp; details</h2>
+          <p id="submit-error" class="submit-error" role="alert"></p>
+          <form id="checkout-form" novalidate>
+            <div class="form-group">
+              <label for="email">Email <span aria-hidden="true">*</span></label>
+              <input type="email" id="email" name="email" required autocomplete="email" />
+              <span class="error-msg" id="email-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="ship-name">Shipping name <span aria-hidden="true">*</span></label>
+              <input type="text" id="ship-name" name="ship-name" required autocomplete="name" />
+              <span class="error-msg" id="ship-name-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="ship-line1">Address line 1 <span aria-hidden="true">*</span></label>
+              <input type="text" id="ship-line1" name="ship-line1" required autocomplete="street-address" />
+              <span class="error-msg" id="ship-line1-error"></span>
+            </div>
+            <div class="form-group">
+              <label for="ship-line2">Address line 2 <span class="optional">(optional)</span></label>
+              <input type="text" id="ship-line2" name="ship-line2" autocomplete="address-line2" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ship-city">City <span aria-hidden="true">*</span></label>
+                <input type="text" id="ship-city" name="ship-city" required autocomplete="address-level2" />
+                <span class="error-msg" id="ship-city-error"></span>
+              </div>
+              <div class="form-group">
+                <label for="ship-state">State / Province <span aria-hidden="true">*</span></label>
+                <input type="text" id="ship-state" name="ship-state" required autocomplete="address-level1" />
+                <span class="error-msg" id="ship-state-error"></span>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ship-postal">Postal code <span aria-hidden="true">*</span></label>
+                <input type="text" id="ship-postal" name="ship-postal" required autocomplete="postal-code" />
+                <span class="error-msg" id="ship-postal-error"></span>
+              </div>
+              <div class="form-group">
+                <label for="ship-country">Country <span aria-hidden="true">*</span></label>
+                <select id="ship-country" name="ship-country" required autocomplete="country">
+                  <option value="US" selected>United States</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="AU">Australia</option>
+                  <option value="OTHER">Other</option>
+                </select>
+                <span class="error-msg" id="ship-country-error"></span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="shipping-method">Shipping method</label>
+              <select id="shipping-method" name="shipping-method">
+                <option value="Standard" selected>Standard</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="customer-notes">Customer notes <span class="optional">(optional)</span></label>
+              <textarea id="customer-notes" name="customer-notes" rows="3" placeholder="Special instructions for your order"></textarea>
+            </div>
+            <div class="ack-group" role="group" aria-labelledby="ack-heading">
+              <span id="ack-heading" class="visually-hidden">Age and compliance</span>
+              <label>
+                <input type="checkbox" id="ack-age" name="ack-age" required />
+                I confirm I'm 21+ and purchasing for lawful research use only.
+              </label>
+              <span class="error-msg" id="ack-error"></span>
+            </div>
+            <button type="submit" class="btn-confirm" id="btn-confirm">Confirm order</button>
+          </form>
+        </div>
+        <div id="checkout-summary" class="checkout-summary collapsible" aria-labelledby="summary-heading">
+          <button type="button" class="summary-toggle" id="summary-toggle" aria-expanded="false" aria-controls="summary-body">Order summary</button>
+          <h3 id="summary-heading">Order summary</h3>
+          <div id="summary-body" class="summary-body">
+            <div class="summary-items" id="summary-items"></div>
+            <div class="summary-totals">
+              <div class="summary-row total"><span>Total</span><span id="summary-total">$0.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="https://imagedelivery.net/g7wf09fCONpnidkRnR_5vw/674cdd91-65f9-4b9c-21ba-bd5fc0f4c500/avatar" alt="Pelican Peptides" />
+        <p>Scientific integrity and transparent sourcing for research professionals.</p>
+      </div>
+      <div class="footer-section">
+        <h3>Explore</h3>
+        <ul>
+          <li><a href="/products">Catalog</a></li>
+          <li><a href="/quality">Quality</a></li>
+          <li><a href="/faq">FAQ</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="/about">About Us</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/wholesale">Wholesale</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Legal</h3>
+        <ul>
+          <li><a href="/disclaimer">Disclaimer &amp; Legal</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2026 Pelican Peptides. Research Use Only.</div>
+  </footer>
+
+  <div class="chat-widget" aria-label="Contact">
+    <button type="button" class="chat-toggle" id="chat-toggle" aria-label="Open contact"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.5m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg></button>
+    <div class="chat-panel" id="chat-panel">
+      <h3>Chat with us</h3>
+      <p class="chat-tagline">Ask about orders, shipping, or our research-grade catalog.</p>
+      <div class="chat-messages" id="chat-messages"></div>
+      <p class="chat-typing" id="chat-typing">Thinking…</p>
+      <div class="chat-input-wrap">
+        <input type="text" id="chat-input" placeholder="Type a message…" maxlength="2000" />
+        <button type="button" class="chat-send" id="chat-send">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Payment wiring (Square hosted checkout via Worker endpoint)
+      var PAYMENT_PROVIDER = 'square'; // 'square' | 'manual'
+      var ORDER_CREATE_ENDPOINT = '/api/checkout/create';
+      var SQUARE_CHECKOUT_ENDPOINT = '/api/square/checkout';
+
+      var CART_KEY = 'pelican_cart';
+      function getCart() {
+        try { var raw = localStorage.getItem(CART_KEY); return raw ? JSON.parse(raw) : []; } catch (e) { return []; }
+      }
+      function setCart(cart) {
+        try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch (e) {}
+      }
+      function updateCartCount() {
+        var el = document.getElementById('cart-count');
+        if (!el) return;
+        var cart = getCart();
+        var total = cart.reduce(function(s, i) { return s + (Math.max(1, parseInt(i.quantity, 10) || 1)); }, 0);
+        el.textContent = total ? '(' + total + ')' : '(0)';
+      }
+      updateCartCount();
+
+      var cart = getCart().map(function(i) {
+        return {
+          id: i.id || '',
+          slug: i.slug || '',
+          name: i.name || '',
+          variantName: i.variantName || '',
+          price: parseFloat(i.price) || 0,
+          quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
+          image_url: i.image_url || ''
+        };
+      }).filter(function(i) { return i.slug || i.id; });
+
+      var emptyEl = document.getElementById('checkout-empty');
+      var contentEl = document.getElementById('checkout-content');
+      if (cart.length === 0) {
+        if (emptyEl) emptyEl.style.display = 'block';
+        if (contentEl) contentEl.style.display = 'none';
+      } else {
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'grid';
+      }
+
+      function renderSummary() {
+        var cart = getCart().map(function(i) {
+          return {
+            id: i.id || '',
+            slug: i.slug || '',
+            name: i.name || '',
+            variantName: i.variantName || '',
+            price: parseFloat(i.price) || 0,
+            quantity: Math.max(1, parseInt(i.quantity, 10) || 1),
+            image_url: i.image_url || ''
+          };
+        }).filter(function(i) { return i.slug || i.id; });
+        if (cart.length === 0) {
+          if (emptyEl) emptyEl.style.display = 'block';
+          if (contentEl) contentEl.style.display = 'none';
+          return;
+        }
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'grid';
+        var subtotal = 0;
+        cart.forEach(function(i) { subtotal += i.price * i.quantity; });
+        var itemsEl = document.getElementById('summary-items');
+        var totalEl = document.getElementById('summary-total');
+        if (itemsEl) {
+          itemsEl.innerHTML = cart.map(function(i, idx) {
+            var line = i.price * i.quantity;
+            var img = i.image_url ? '<img src="' + i.image_url.replace(/"/g, '&quot;') + '" alt="" loading="lazy" />' : '<div style="width:56px;height:56px;background:var(--gray-200);border-radius:8px;"></div>';
+            return '<div class="summary-item" data-index="' + idx + '">' + img + '<div class="summary-item-info"><div class="summary-item-name">' + (i.name || i.slug || i.id).replace(/</g, '&lt;') + '</div><div class="summary-item-variant">' + (i.variantName || '').replace(/</g, '&lt;') + '</div><div class="summary-item-qty">Qty: ' + i.quantity + '</div></div><div class="summary-item-total">$' + line.toFixed(2) + '</div><button type="button" class="summary-item-remove" aria-label="Remove from order">Remove</button></div>';
+          }).join('');
+          itemsEl.querySelectorAll('.summary-item-remove').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+              var idx = parseInt(btn.closest('.summary-item').getAttribute('data-index'), 10);
+              var c = getCart();
+              c.splice(idx, 1);
+              setCart(c);
+              renderSummary();
+              updateCartCount();
+            });
+          });
+        }
+        if (totalEl) totalEl.textContent = '$' + subtotal.toFixed(2);
+      }
+      renderSummary();
+
+      var toggleBtn = document.getElementById('summary-toggle');
+      var summaryCard = document.getElementById('checkout-summary');
+      if (toggleBtn && summaryCard) {
+        toggleBtn.addEventListener('click', function() {
+          var open = summaryCard.classList.toggle('open');
+          toggleBtn.setAttribute('aria-expanded', open);
+        });
+      }
+
+      function showError(id, msg) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = msg || ''; el.style.display = msg ? 'block' : 'none'; }
+      }
+      function setFieldError(fieldId, hasError) {
+        var input = document.getElementById(fieldId);
+        if (input) input.classList.toggle('error', !!hasError);
+      }
+      var submitErrorEl = document.getElementById('submit-error');
+      function showSubmitError(msg) {
+        if (submitErrorEl) {
+          submitErrorEl.textContent = msg || '';
+          submitErrorEl.classList.toggle('visible', !!msg);
+        }
+      }
+
+      function toSquareItemKey(item) {
+        // Prefer stable `id` if present; else use slug as key (server supports both).
+        return (item && (item.id || item.slug)) ? String(item.id || item.slug) : '';
+      }
+
+      function startSquareCheckout(orderNumber, cartNow, btn) {
+        var returnPath = '/order-confirmation?order=' + encodeURIComponent(orderNumber);
+        if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to Square…'; }
+        return fetch(SQUARE_CHECKOUT_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: cartNow.map(function(i){ return { id: toSquareItemKey(i), slug: i.slug || '', quantity: i.quantity }; }),
+            return_path: returnPath
+          })
+        }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); }).then(function(res) {
+          if (res.status === 200 && res.data && res.data.ok && res.data.url) {
+            window.location.href = res.data.url;
+            return;
+          }
+          // Payment link failed — fall back to confirmation (order already created)
+          window.location.href = returnPath;
+        }).catch(function() {
+          window.location.href = returnPath;
+        });
+      }
+
+      document.getElementById('checkout-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        showSubmitError('');
+        document.querySelectorAll('.form-group .error-msg').forEach(function(el) { el.textContent = ''; });
+        document.querySelectorAll('.form-group input, .form-group select').forEach(function(el) { el.classList.remove('error'); });
+        setFieldError('email', false);
+        setFieldError('ship-name', false);
+        setFieldError('ship-line1', false);
+        setFieldError('ship-city', false);
+        setFieldError('ship-state', false);
+        setFieldError('ship-postal', false);
+        showError('ack-error', '');
+
+        var email = (document.getElementById('email').value || '').trim();
+        var name = (document.getElementById('ship-name').value || '').trim();
+        var line1 = (document.getElementById('ship-line1').value || '').trim();
+        var city = (document.getElementById('ship-city').value || '').trim();
+        var state = (document.getElementById('ship-state').value || '').trim();
+        var postal = (document.getElementById('ship-postal').value || '').trim();
+        var country = (document.getElementById('ship-country').value || 'US').trim();
+        var ackAge = document.getElementById('ack-age').checked;
+
+        var valid = true;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('email-error', 'Enter a valid email.'); setFieldError('email', true); valid = false; }
+        if (!name) { showError('ship-name-error', 'Required.'); setFieldError('ship-name', true); valid = false; }
+        if (!line1) { showError('ship-line1-error', 'Required.'); setFieldError('ship-line1', true); valid = false; }
+        if (!city) { showError('ship-city-error', 'Required.'); setFieldError('ship-city', true); valid = false; }
+        if (!state) { showError('ship-state-error', 'Required.'); setFieldError('ship-state', true); valid = false; }
+        if (!postal) { showError('ship-postal-error', 'Required.'); setFieldError('ship-postal', true); valid = false; }
+        if (!ackAge) {
+          showError('ack-error', 'You must confirm you are 21+ and purchasing for lawful research use only.');
+          valid = false;
+        }
+        var cartNow = getCart().map(function(i) {
+          return { id: i.id || '', slug: i.slug || '', name: i.name || '', variantName: i.variantName || '', price: parseFloat(i.price) || 0, quantity: Math.max(1, parseInt(i.quantity, 10) || 1), image_url: i.image_url || '' };
+        }).filter(function(i) { return i.slug || i.id; });
+        if (cartNow.length === 0) {
+          showSubmitError('Your cart is empty. Add items before checkout.');
+          valid = false;
+        }
+        if (!valid) return;
+
+        var btn = document.getElementById('btn-confirm');
+        if (btn) { btn.disabled = true; btn.textContent = 'Placing order…'; }
+        var payload = {
+          email: email,
+          shipping: { name: name, line1: line1, line2: (document.getElementById('ship-line2').value || '').trim(), city: city, state: state, postal: postal, country: country },
+          shipping_method: (document.getElementById('shipping-method').value || 'Standard').trim(),
+          customer_notes: (document.getElementById('customer-notes').value || '').trim(),
+          cart: cartNow,
+          age_ack_checkout: true,
+          ack_version: 'checkout_v1'
+        };
+        fetch(ORDER_CREATE_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); }).then(function(res) {
+          if (res.status === 200 && res.data && res.data.success && res.data.order_number) {
+            // If Square is enabled, redirect to Square hosted checkout; otherwise go straight to confirmation.
+            if (PAYMENT_PROVIDER === 'square') {
+              return startSquareCheckout(res.data.order_number, cartNow, btn);
+            }
+            window.location.href = '/order-confirmation?order=' + encodeURIComponent(res.data.order_number);
+            return;
+          }
+          showSubmitError((res.data && res.data.error) || 'Something went wrong. Please try again.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Confirm order'; }
+        }).catch(function() {
+          showSubmitError('Network error. Please try again.');
+          if (btn) { btn.disabled = false; btn.textContent = 'Confirm order'; }
+        });
+      });
+    })();
+  </script>
+  <script>
+    (function(){
+      var toggle = document.getElementById('chat-toggle');
+      var panel = document.getElementById('chat-panel');
+      var messagesEl = document.getElementById('chat-messages');
+      var input = document.getElementById('chat-input');
+      var sendBtn = document.getElementById('chat-send');
+      var typingEl = document.getElementById('chat-typing');
+      var history = [];
+      if (toggle && panel) toggle.addEventListener('click', function() { panel.classList.toggle('open'); });
+      function appendMsg(role, content) {
+        if (!messagesEl) return;
+        var div = document.createElement('div');
+        div.className = 'chat-msg ' + role;
+        div.textContent = content;
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+      function setBusy(busy) {
+        if (input) input.disabled = busy;
+        if (sendBtn) sendBtn.disabled = busy;
+        if (typingEl) typingEl.classList.toggle('visible', busy);
+      }
+      function send() {
+        var msg = (input && input.value) ? input.value.trim() : '';
+        if (!msg) return;
+        if (input) input.value = '';
+        appendMsg('user', msg);
+        history.push({ role: 'user', content: msg });
+        setBusy(true);
+        fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: msg, history: history.slice(-20) }) })
+          .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+          .then(function(res) {
+            setBusy(false);
+            if (res.status === 200 && res.data.success && res.data.reply) {
+              appendMsg('assistant', res.data.reply);
+              history.push({ role: 'assistant', content: res.data.reply });
+            } else {
+              appendMsg('assistant', (res.data && res.data.error) || 'Something went wrong. Please try again.');
+            }
+          })
+          .catch(function() { setBusy(false); appendMsg('assistant', 'Something went wrong. Please try again.'); });
+      }
+      if (sendBtn) sendBtn.addEventListener('click', send);
+      if (input) input.addEventListener('keydown', function(e) { if (e.key === 'Enter') send(); });
+    })();
+  </script>
+</body>
+</html>
+
