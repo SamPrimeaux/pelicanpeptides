@@ -100,6 +100,9 @@
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,78,138,0.15); }
     .form-group input.error, .form-group select.error { border-color: #c00; }
     .form-group .error-msg { font-size: 13px; color: #c00; margin-top: 4px; }
+    #card-container { padding: 12px 14px; border: 1px solid var(--gray-200); border-radius: 8px; background: rgba(255,255,255,0.85); }
+    #card-container:focus-within { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,78,138,0.15); }
+    .pay-note { font-size: 13px; color: var(--gray-500); margin-top: 8px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
     .ack-group { margin: 24px 0; padding: 16px; background: var(--gray-100); border-radius: 8px; border: 1px solid var(--gray-200); }
@@ -308,6 +311,12 @@
               <label for="customer-notes">Customer notes <span class="optional">(optional)</span></label>
               <textarea id="customer-notes" name="customer-notes" rows="3" placeholder="Special instructions for your order"></textarea>
             </div>
+            <div class="form-group" aria-labelledby="pay-heading">
+              <label id="pay-heading">Payment <span aria-hidden="true">*</span></label>
+              <div id="card-container" aria-label="Card payment"></div>
+              <span class="error-msg" id="card-error"></span>
+              <div class="pay-note">Your payment is processed securely by Square.</div>
+            </div>
             <div class="ack-group" role="group" aria-labelledby="ack-heading">
               <span id="ack-heading" class="visually-hidden">Age and compliance</span>
               <label>
@@ -379,12 +388,15 @@
     </div>
   </div>
 
+  <script src="https://web.squarecdn.com/v1/square.js"></script>
   <script>
     (function() {
       // Payment wiring (Square hosted checkout via Worker endpoint)
       var PAYMENT_PROVIDER = 'square'; // 'square' | 'manual'
       var ORDER_CREATE_ENDPOINT = '/api/checkout/create';
-      var SQUARE_CHECKOUT_ENDPOINT = '/api/square/checkout';
+      var SQUARE_CONFIG_ENDPOINT = '/api/square/config';
+      var SQUARE_TOTAL_ENDPOINT = '/api/square/order-total';
+      var SQUARE_PAY_ENDPOINT = '/api/square/pay';
 
       var CART_KEY = 'pelican_cart';
       function getCart() {
@@ -493,36 +505,124 @@
         }
       }
 
+      var cardErrorEl = document.getElementById('card-error');
+      function showCardError(msg) {
+        if (cardErrorEl) cardErrorEl.textContent = msg || '';
+      }
+
+      var square = { payments: null, card: null, appId: null, locationId: null, environment: null };
+
+      function initSquareCard() {
+        if (!window.Square || !window.Square.payments) {
+          showCardError('Square failed to load. Please refresh and try again.');
+          return Promise.reject(new Error('Square SDK not loaded'));
+        }
+        return fetch(SQUARE_CONFIG_ENDPOINT)
+          .then(function(r){ return r.json().then(function(d){ return { status: r.status, data: d }; }); })
+          .then(function(res){
+            if (res.status !== 200 || !res.data || !res.data.success) throw new Error('Square not configured');
+            square.environment = res.data.environment || 'production';
+            square.appId = res.data.application_id;
+            square.locationId = res.data.location_id;
+            if (!square.appId || !square.locationId) throw new Error('Square Application ID / Location ID missing');
+            square.payments = window.Square.payments(square.appId, square.locationId);
+            return square.payments.card();
+          })
+          .then(function(card){
+            square.card = card;
+            return square.card.attach('#card-container');
+          })
+          .catch(function(err){
+            console.error(err);
+            showCardError('Payment setup is unavailable right now.');
+            var btn = document.getElementById('btn-confirm');
+            if (btn) btn.disabled = true;
+          });
+      }
+
+      // Kick off Square card mount ASAP
+      initSquareCard();
+
       function toSquareItemKey(item) {
         // Prefer stable `id` if present; else use slug as key (server supports both).
         return (item && (item.id || item.slug)) ? String(item.id || item.slug) : '';
       }
 
-      function startSquareCheckout(orderNumber, cartNow, btn) {
-        var returnPath = '/order-confirmation?order=' + encodeURIComponent(orderNumber);
-        if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to Square…'; }
-        return fetch(SQUARE_CHECKOUT_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: cartNow.map(function(i){ return { id: toSquareItemKey(i), slug: i.slug || '', quantity: i.quantity }; }),
-            return_path: returnPath
-          })
-        }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); }).then(function(res) {
-          if (res.status === 200 && res.data && res.data.ok && res.data.url) {
-            window.location.href = res.data.url;
-            return;
-          }
-          // Payment link failed — fall back to confirmation (order already created)
-          window.location.href = returnPath;
-        }).catch(function() {
-          window.location.href = returnPath;
+      function getOrderTotal(orderNumber, email) {
+        var u = SQUARE_TOTAL_ENDPOINT + '?order=' + encodeURIComponent(orderNumber) + '&email=' + encodeURIComponent(email);
+        return fetch(u).then(function(r){ return r.json().then(function(d){ return { status: r.status, data: d }; }); }).then(function(res){
+          if (res.status !== 200 || !res.data || !res.data.success) throw new Error((res.data && res.data.error) || 'Failed to fetch order total');
+          return { amount: res.data.amount, currency: res.data.currency || 'USD' };
         });
+      }
+
+      function tokenizeAndPay(orderNumber, email, btn) {
+        if (!square.card || !square.payments) {
+          showCardError('Payment form is still loading. Please wait a moment and try again.');
+          return Promise.reject(new Error('Square not ready'));
+        }
+        showCardError('');
+        if (btn) { btn.disabled = true; btn.textContent = 'Processing payment…'; }
+
+        var tokenResult = null;
+        var verifyToken = '';
+        var amountInfo = null;
+
+        return square.card.tokenize()
+          .then(function(res){
+            if (!res || res.status !== 'OK') {
+              var msg = (res && res.errors && res.errors[0] && res.errors[0].message) ? res.errors[0].message : 'Card details are invalid.';
+              throw new Error(msg);
+            }
+            tokenResult = res;
+            return getOrderTotal(orderNumber, email);
+          })
+          .then(function(a){
+            amountInfo = a;
+            // verifyBuyer is required in some regions (SCA). If it fails or isn't supported, we continue without it.
+            if (!square.payments.verifyBuyer) return null;
+            return square.payments.verifyBuyer(tokenResult.token, {
+              amountMoney: { amount: amountInfo.amount, currency: amountInfo.currency },
+              intent: 'CHARGE',
+              billingContact: { email: email }
+            }).catch(function(err){
+              console.warn('verifyBuyer skipped/failed', err);
+              return null;
+            });
+          })
+          .then(function(v){
+            if (v && v.token) verifyToken = v.token;
+            return fetch(SQUARE_PAY_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                order_number: orderNumber,
+                email: email,
+                source_id: tokenResult.token,
+                verification_token: verifyToken
+              })
+            }).then(function(r){ return r.json().then(function(d){ return { status: r.status, data: d }; }); });
+          })
+          .then(function(res){
+            if (res.status === 200 && res.data && res.data.success) {
+              window.location.href = '/order-confirmation?order=' + encodeURIComponent(orderNumber);
+              return;
+            }
+            throw new Error((res.data && res.data.error) || 'Payment failed. Please try again.');
+          })
+          .catch(function(err){
+            console.error(err);
+            showSubmitError(err && err.message ? err.message : 'Payment failed. Please try again.');
+          })
+          .finally(function(){
+            if (btn) { btn.disabled = false; btn.textContent = 'Confirm order'; }
+          });
       }
 
       document.getElementById('checkout-form').addEventListener('submit', function(e) {
         e.preventDefault();
         showSubmitError('');
+        showCardError('');
         document.querySelectorAll('.form-group .error-msg').forEach(function(el) { el.textContent = ''; });
         document.querySelectorAll('.form-group input, .form-group select').forEach(function(el) { el.classList.remove('error'); });
         setFieldError('email', false);
@@ -579,9 +679,8 @@
           body: JSON.stringify(payload)
         }).then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); }).then(function(res) {
           if (res.status === 200 && res.data && res.data.success && res.data.order_number) {
-            // If Square is enabled, redirect to Square hosted checkout; otherwise go straight to confirmation.
             if (PAYMENT_PROVIDER === 'square') {
-              return startSquareCheckout(res.data.order_number, cartNow, btn);
+              return tokenizeAndPay(res.data.order_number, email, btn);
             }
             window.location.href = '/order-confirmation?order=' + encodeURIComponent(res.data.order_number);
             return;
