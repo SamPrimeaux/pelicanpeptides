@@ -1,0 +1,52 @@
+name = "pelicanpeptides"
+compatibility_date = "2026-01-20"
+
+# Deploy with:
+# npx wrangler deploy /workspace/live_worker/index.js -c wrangler.pelican.toml --no-bundle --keep-vars
+
+ai = { binding = "AI" }
+
+workers_dev = false
+preview_urls = true
+
+routes = [
+  { pattern = "pelicanpeptides.com/*", zone_name = "pelicanpeptides.com" },
+  { pattern = "www.pelicanpeptides.com/*", zone_name = "pelicanpeptides.com" }
+]
+
+tail_consumers = [{ service = "inneranimalmedia-tail" }]
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1
+
+[vars]
+# Keep vars already set in dashboard; `--keep-vars` prevents deletions.
+SITE_ORIGIN = "https://pelicanpeptides.com"
+RECEIPT_FROM = "Pelican Peptides <info@pelicanpeptides.com>"
+RECEIPT_TEST_TO = "meauxbility@gmail.com"
+SHIP_FROM_NAME = "Pelican Peptides"
+STRIPE_MODE = "test"
+SQUARE_ENVIRONMENT = "production"
+SQUARE_APPLICATION_ID = "sq0idp-n-cr4zjumXYGk4lWFZqECQ"
+
+[[r2_buckets]]
+binding = "R2_ASSETS"
+bucket_name = "pelicanpeptides"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pelicanpeptides"
+database_id = "7c917568-399a-4b53-85e5-a1430c24edbf"
+

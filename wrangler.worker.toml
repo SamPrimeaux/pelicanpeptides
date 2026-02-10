@@ -1,0 +1,44 @@
+name = "pelicanpeptides"
+main = "src/worker.ts"
+compatibility_date = "2026-01-20"
+
+# This file is intentionally separate from `wrangler.json` (Pages config).
+# Deploy this Worker with: `npx wrangler deploy --config wrangler.worker.toml`
+
+workers_dev = true
+
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
+# If you deploy via dashboard routes instead, you can omit routes here.
+# routes = [
+#   { pattern = "pelicanpeptides.com/*", zone_name = "pelicanpeptides.com" },
+#   { pattern = "www.pelicanpeptides.com/*", zone_name = "pelicanpeptides.com" }
+# ]
+
+[vars]
+SITE_ORIGIN = "https://pelicanpeptides.com"
+SQUARE_ENVIRONMENT = "production" # or "sandbox"
+SQUARE_DEFAULT_CURRENCY = "USD"
+
+[[r2_buckets]]
+binding = "R2_ASSETS"
+bucket_name = "pelicanpeptides"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pelicanpeptides"
+database_id = "7c917568-399a-4b53-85e5-a1430c24edbf"
+
